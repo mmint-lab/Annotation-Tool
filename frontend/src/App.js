@@ -532,10 +532,7 @@ const AnnotationInterface = ({ sentences, currentIndex, onIndexChange, domains, 
   const [tags, setTags] = useState('');
   const [notes, setNotes] = useState('');
   
-  console.log('AnnotationInterface props:', { sentences: sentences?.length, currentIndex, selectedDomain });
-  
   const currentSentence = sentences[currentIndex];
-  console.log('Current sentence:', currentSentence);
   
   if (!currentSentence) return null;
 
