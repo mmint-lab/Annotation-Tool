@@ -318,7 +318,7 @@ async def get_sentence_annotations(
     sentence_id: str,
     current_user: User = Depends(get_current_user)
 ):
-    annotations = await db.annotations.find({"sentence_id": sentence_id}).to_list(1000)
+    annotations = await db.annotations.find({"sentence_id": sentence_id}, {"_id": 0}).to_list(1000)
     return annotations
 
 # Analytics Routes
