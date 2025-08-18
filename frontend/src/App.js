@@ -481,8 +481,11 @@ const Dashboard = () => {
                     </div>
                     <Button
                       onClick={() => {
-                        alert('Annotate clicked! Doc ID: ' + doc.id);
+                        console.log('=== ANNOTATE BUTTON CLICKED ===');
+                        console.log('Document object:', doc);
+                        console.log('About to call loadDocumentSentences with ID:', doc.id);
                         loadDocumentSentences(doc.id);
+                        console.log('loadDocumentSentences called');
                       }}
                       variant="outline"
                     >
