@@ -259,7 +259,7 @@ async def upload_document(
 
 @api_router.get("/documents", response_model=List[Document])
 async def get_documents(current_user: User = Depends(get_current_user)):
-    documents = await db.documents.find().to_list(1000)
+    documents = await db.documents.find({}, {"_id": 0}).to_list(1000)
     return [Document(**doc) for doc in documents]
 
 @api_router.get("/documents/{document_id}/sentences")
