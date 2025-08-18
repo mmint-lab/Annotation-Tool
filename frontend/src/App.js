@@ -324,11 +324,14 @@ const Dashboard = () => {
 
   const loadDocumentSentences = async (documentId) => {
     try {
+      console.log('Loading sentences for document:', documentId);
       const response = await axios.get(`${API}/documents/${documentId}/sentences`);
+      console.log('Sentences response:', response.data);
       setSentences(response.data);
       setSelectedDocument(documentId);
       setCurrentSentenceIndex(0);
       
+      console.log('Switching to annotate tab');
       // Switch to annotate tab
       setActiveTab('annotate');
     } catch (error) {
