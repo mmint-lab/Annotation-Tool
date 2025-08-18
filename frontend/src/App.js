@@ -356,7 +356,7 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <Tabs defaultValue="upload" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="upload" className="flex items-center space-x-2">
             <Upload className="h-4 w-4" />
