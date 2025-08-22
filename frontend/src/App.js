@@ -785,7 +785,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
               variant="outline"
               className="border-orange-300 text-orange-700 hover:bg-orange-50"
             >
-              <Skip className="h-4 w-4 mr-2" />
+              <SkipForward className="h-4 w-4 mr-2" />
               Skip - No SDOH Content
             </Button>
             
