@@ -578,7 +578,12 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
-                        onClick={() => handleAnnotateClick(doc.id)}
+                        onClick={(e) => {
+                          console.log('=== ANNOTATE BUTTON CLICKED ===', doc.id);
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleAnnotateClick(doc.id);
+                        }}
                         variant="outline"
                       >
                         Annotate
