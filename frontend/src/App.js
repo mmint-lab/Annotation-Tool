@@ -683,8 +683,14 @@ const AdminManagementPanel = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users from API...');
       const response = await axios.get(`${API}/admin/users`);
+      console.log('Received users from API:', response.data.length, 'users');
+      console.log('User list:', response.data.map(u => ({ id: u.id, name: u.full_name, email: u.email })));
+      
       setUsers(response.data);
+      console.log('State updated with new user list');
+      
     } catch (error) {
       console.error('Error fetching users:', error);
       alert('Error fetching users: ' + (error.response?.data?.detail || 'Please try again.'));
