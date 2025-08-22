@@ -717,7 +717,9 @@ const AdminManagementPanel = () => {
     }
   };
 
-  const deleteUser = (userId, userName) => {
+  const deleteUser = async (userId, userName) => {
+    console.log('Starting deletion process for:', { userId, userName });
+    
     // Prevent deleting yourself
     if (userId === currentUser?.id) {
       alert("You cannot delete your own account!");
@@ -735,27 +737,39 @@ const AdminManagementPanel = () => {
     );
 
     if (!confirmed) {
+      console.log('User cancelled deletion');
       return;
     }
-    
-    // Set loading state
-    setDeletingUserId(userId);
-    
-    // Perform the deletion immediately
-    axios.delete(`${API}/admin/users/${userId}`)
-      .then((response) => {
-        alert(`User "${userName}" deleted successfully!`);
-        // Force refresh the users list
-        return fetchUsers();
-      })
-      .catch((error) => {
-        console.error('Error in deletion:', error);
-        const errorMessage = error.response?.data?.detail || 'Failed to delete user. Please try again.';
-        alert('Error deleting user: ' + errorMessage);
-      })
-      .finally(() => {
-        setDeletingUserId(null);
-      });
+
+    try {
+      console.log('User confirmed deletion, proceeding...');
+      
+      // Set loading state
+      setDeletingUserId(userId);
+      
+      console.log('Making DELETE request to:', `${API}/admin/users/${userId}`);
+      
+      // Make the delete request
+      const response = await axios.delete(`${API}/admin/users/${userId}`);
+      console.log('Delete response:', response.status, response.data);
+      
+      // Show success message
+      alert(`User "${userName}" deleted successfully!`);
+      
+      // Force refresh the users list
+      console.log('Refreshing user list...');
+      await fetchUsers();
+      console.log('User list refresh completed');
+      
+    } catch (error) {
+      console.error('Error during deletion:', error);
+      console.error('Error response:', error.response);
+      const errorMessage = error.response?.data?.detail || 'Failed to delete user. Please try again.';
+      alert('Error deleting user: ' + errorMessage);
+    } finally {
+      console.log('Cleaning up loading state');
+      setDeletingUserId(null);
+    }
   };
 
   return (
