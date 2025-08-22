@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
@@ -15,7 +15,7 @@ import { Checkbox } from "./components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Separator } from "./components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
-import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Plus, X, SkipForward, Shield, Settings, Trash2, Edit, Eye, Download } from "lucide-react";
+import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Plus, X, SkipForward, Shield, Settings, Trash2, Edit, Eye, Download, Home } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -111,17 +111,22 @@ const useAuth = () => {
 // Components
 const Header = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-3">
+          <button
+            type="button"
+            onClick={() => navigate('/home')}
+            className="flex items-center space-x-3 hover:opacity-80"
+          >
             <FileText className="h-8 w-8 text-blue-600" />
             <h1 className="text-xl font-semibold text-gray-900">
               SDOH Annotation Tool
             </h1>
-          </div>
+          </button>
           
           {user && (
             <div className="flex items-center space-x-4">
@@ -271,6 +276,33 @@ const AuthForm = () => {
   );
 };
 
+const Home = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  return (
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <Card className="enhanced-card">
+        <CardHeader>
+          <CardTitle className="gradient-text">Welcome to the SDOH Annotation Tool</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-gray-700">Use the quick links below to get started.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <Button variant="outline" onClick={() => navigate('/')}>Go to Dashboard</Button>
+            <Button variant="outline" onClick={() => navigate('/#documents')}>Documents</Button>
+            <Button variant="outline" onClick={() => navigate('/#annotate')}>Annotate</Button>
+            <Button variant="outline" onClick={() => navigate('/#resources')}>Resources</Button>
+            <Button variant="outline" onClick={() => navigate('/#analytics')}>Analytics</Button>
+            {user?.role === 'admin' && (
+              <Button variant="outline" onClick={() => navigate('/#upload')}>Admin Upload</Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
@@ -285,10 +317,14 @@ const Dashboard = () => {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
 
+  const [resources, setResources] = useState([]);
+  const [resourceFile, setResourceFile] = useState(null);
+
   useEffect(() => {
     fetchDocuments();
     fetchAnalytics();
     fetchTagStructure();
+    fetchResources();
   }, []);
 
   const fetchDocuments = async () => {
@@ -315,6 +351,15 @@ const Dashboard = () => {
       setTagStructure(response.data.tag_structure);
     } catch (error) {
       console.error('Error fetching tag structure:', error);
+    }
+  };
+
+  const fetchResources = async () => {
+    try {
+      const res = await axios.get(`${API}/resources`);
+      setResources(res.data || []);
+    } catch (err) {
+      console.error('Error fetching resources:', err);
     }
   };
 
@@ -495,6 +540,56 @@ const Dashboard = () => {
     }
   };
 
+  const uploadResource = async () => {
+    if (!resourceFile) return;
+    const form = new FormData();
+    form.append('file', resourceFile);
+    try {
+      await axios.post(`${API}/admin/resources/upload`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setResourceFile(null);
+      fetchResources();
+    } catch (err) {
+      console.error('Error uploading resource', err);
+      alert('Error uploading resource: ' + (err.response?.data?.detail || 'Please try again.'));
+    }
+  };
+
+  const downloadResource = async (resItem) => {
+    try {
+      const url = `${API}/resources/${resItem.id}/download`;
+      const token = localStorage.getItem('token');
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const filename = resItem.filename || 'resource';
+      const link = document.createElement('a');
+      const urlObj = window.URL.createObjectURL(blob);
+      link.href = urlObj;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(urlObj);
+    } catch (err) {
+      console.error('Error downloading resource', err);
+      alert('Error downloading resource: ' + (err.message || 'Please try again.'));
+    }
+  };
+
+  const deleteResource = async (resItem) => {
+    if (!window.confirm(`Delete resource "${resItem.filename}"?`)) return;
+    try {
+      await axios.delete(`${API}/admin/resources/${resItem.id}`);
+      fetchResources();
+    } catch (err) {
+      console.error('Error deleting resource', err);
+      alert('Error deleting resource: ' + (err.response?.data?.detail || 'Please try again.'));
+    }
+  };
+
   // Determine which tabs to show based on user role
   const getTabsForUser = () => {
     if (user?.role === 'admin') {
@@ -503,12 +598,14 @@ const Dashboard = () => {
         { value: 'upload', label: 'Upload', icon: Upload },
         { value: 'documents', label: 'Documents', icon: FileText },
         { value: 'annotate', label: 'Annotate', icon: Tag },
+        { value: 'resources', label: 'Resources', icon: FileText },
         { value: 'analytics', label: 'Analytics', icon: BarChart3 }
       ];
     } else {
       return [
         { value: 'documents', label: 'Documents', icon: FileText },
         { value: 'annotate', label: 'Annotate', icon: Tag },
+        { value: 'resources', label: 'Resources', icon: FileText },
         { value: 'analytics', label: 'Analytics', icon: BarChart3 }
       ];
     }
@@ -631,7 +728,7 @@ const Dashboard = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="documents" className="space-y-4">
+        <TabsContent value="documents" className="space-y-4" id="documents">
           <div className="grid gap-4">
             {documents.map((doc) => (
               <Card key={doc.id} className="cursor-pointer hover:shadow-md transition-shadow">
@@ -662,7 +759,7 @@ const Dashboard = () => {
                         <>
                           <button
                             type="button"
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('CSV download clicked'); downloadAnnotatedCsv(doc); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadAnnotatedCsv(doc); }}
                             className="inline-flex items-center justify-center gap-1 h-8 rounded-md px-3 text-xs bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-transparent pointer-events-auto"
                           >
                             <Download className="h-4 w-4 mr-1" /> CSV
@@ -684,7 +781,51 @@ const Dashboard = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
+        <TabsContent value="resources" className="space-y-4" id="resources">
+          {user?.role === 'admin' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload Annotation Guide / Resources</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={(e) => setResourceFile(e.target.files[0])} />
+                <Button onClick={uploadResource} disabled={!resourceFile}>Upload Resource</Button>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Resources</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {resources.length === 0 ? (
+                <p className="text-sm text-gray-600">No resources uploaded yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {resources.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between p-3 border rounded-md">
+                      <div>
+                        <p className="font-medium">{r.filename}</p>
+                        <p className="text-xs text-gray-500">Uploaded {new Date(r.uploaded_at).toLocaleString()}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => downloadResource(r)}>Download</Button>
+                        {user?.role === 'admin' && (
+                          <Button variant="destructive" size="sm" onClick={() => deleteResource(r)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4" id="analytics">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
@@ -931,7 +1072,6 @@ const AdminManagementPanel = () => {
                     size="sm"
                     variant="destructive"
                     onClick={(e) => {
-                      console.log('Delete button clicked!', { userId: user.id, userName: user.full_name }); // Debug log
                       e.preventDefault();
                       e.stopPropagation();
                       deleteUser(user.id, user.full_name);
@@ -1130,7 +1270,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                             </span>
                           </div>
                           {canDelete && (
-                            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('Delete annotation clicked'); onDeleteAnnotation(annotation.id, currentSentence.id); }} className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent">
+                            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteAnnotation(annotation.id, currentSentence.id); }} className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent">
                               <Trash2 className="h-4 w-4" />
                             </button>
                           )}
@@ -1142,7 +1282,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                               by User {annotation.user_id.slice(-6)}
                             </span>
                             {canDelete && (
-                              <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('Delete annotation clicked'); onDeleteAnnotation(annotation.id, currentSentence.id); }} className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent">
+                              <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteAnnotation(annotation.id, currentSentence.id); }} className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent">
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             )}
@@ -1335,6 +1475,7 @@ const AuthenticatedApp = () => {
       <main>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/home" element={<Home />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

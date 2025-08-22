@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 import os
 import logging
 from pathlib import Path
@@ -17,6 +17,7 @@ import csv
 import io
 import re
 from collections import defaultdict
+from bson import ObjectId
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -212,6 +213,23 @@ class AnnotationCreate(BaseModel):
 class DocumentUpload(BaseModel):
     project_name: Optional[str] = None
     description: Optional[str] = None
+
+class Resource(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    content_type: Optional[str] = None
+    size_bytes: int
+    uploaded_by: str
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Helpers
+ALLOWED_RESOURCE_EXTENSIONS = {"pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"}
+
+def get_gridfs_bucket() -> AsyncIOMotorGridFSBucket:
+    return AsyncIOMotorGridFSBucket(db)
+
+def allowed_resource(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_RESOURCE_EXTENSIONS
 
 # Authentication functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -814,6 +832,89 @@ async def download_annotated_csv(document_id: str, admin_user: User = Depends(ge
     filename = f"annotated_{document.get('filename', document_id)}.csv"
     headers = {"Content-Disposition": f"attachment; filename=\"{filename}\""}
     return StreamingResponse(iter([csv_bytes]), media_type="text/csv", headers=headers)
+
+# Resources Routes
+@api_router.post("/admin/resources/upload", response_model=Resource)
+async def upload_resource(
+    file: UploadFile = File(...),
+    admin_user: User = Depends(get_admin_user)
+):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+    if not allowed_resource(file.filename):
+        raise HTTPException(status_code=400, detail="Unsupported file type. Allowed: pdf, doc, docx, xls, xlsx, ppt, pptx")
+
+    content = await file.read()
+    size_bytes = len(content)
+
+    bucket = get_gridfs_bucket()
+    gridfs_id = await bucket.upload_from_stream(file.filename, content)
+
+    resource = Resource(
+        filename=file.filename,
+        content_type=file.content_type,
+        size_bytes=size_bytes,
+        uploaded_by=admin_user.id,
+    )
+    resource_doc = resource.dict()
+    resource_doc["gridfs_id"] = str(gridfs_id)
+
+    await db.resources.insert_one(resource_doc)
+    # Do not expose gridfs_id to clients
+    resource_dict = {k: v for k, v in resource_doc.items() if k != "gridfs_id"}
+    return Resource(**resource_dict)
+
+@api_router.get("/resources")
+async def list_resources(current_user: User = Depends(get_current_user)):
+    items = await db.resources.find({}, {"_id": 0, "gridfs_id": 0}).sort("uploaded_at", -1).to_list(1000)
+    return items
+
+@api_router.get("/resources/{resource_id}/download")
+async def download_resource(resource_id: str, current_user: User = Depends(get_current_user)):
+    doc = await db.resources.find_one({"id": resource_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    gridfs_id_str = doc.get("gridfs_id")
+    if not gridfs_id_str:
+        raise HTTPException(status_code=500, detail="Resource storage pointer missing")
+
+    try:
+        gridfs_oid = ObjectId(gridfs_id_str)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Invalid resource storage id")
+
+    bucket = get_gridfs_bucket()
+    stream = await bucket.open_download_stream(gridfs_oid)
+
+    async def file_iterator(chunk_size: int = 1024 * 256):
+        while True:
+            chunk = await stream.readchunk()
+            if not chunk:
+                break
+            yield bytes(chunk)
+
+    headers = {"Content-Disposition": f"attachment; filename=\"{doc.get('filename', 'resource')}\""}
+    media_type = doc.get("content_type") or "application/octet-stream"
+    return StreamingResponse(file_iterator(), media_type=media_type, headers=headers)
+
+@api_router.delete("/admin/resources/{resource_id}")
+async def delete_resource(resource_id: str, admin_user: User = Depends(get_admin_user)):
+    doc = await db.resources.find_one({"id": resource_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    gridfs_id_str = doc.get("gridfs_id")
+    bucket = get_gridfs_bucket()
+    if gridfs_id_str:
+        try:
+            await bucket.delete(ObjectId(gridfs_id_str))
+        except Exception:
+            # Continue to remove metadata even if GridFS delete fails
+            pass
+
+    await db.resources.delete_one({"id": resource_id})
+    return {"message": "Resource deleted"}
 
 # System Routes
 @api_router.get("/")
