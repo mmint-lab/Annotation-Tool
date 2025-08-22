@@ -676,6 +676,13 @@ class SDOHAPITester:
         self.test_admin_update_user()
         self.test_admin_reactivate_user()
         
+        # === USER DELETION TESTS ===
+        print("\n" + "=" * 25 + " USER DELETION TESTS " + "=" * 25)
+        self.test_admin_delete_user_validation()
+        self.test_admin_delete_nonexistent_user()
+        self.test_admin_delete_user_with_annotations()
+        self.test_admin_verify_user_deleted()
+        
         # Admin document management
         self.test_admin_document_upload()
         if self.test_document_id:
