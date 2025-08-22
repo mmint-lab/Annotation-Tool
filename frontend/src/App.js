@@ -670,6 +670,7 @@ const AdminManagementPanel = () => {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deletingUserId, setDeletingUserId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Force re-render key
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
