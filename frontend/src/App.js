@@ -717,6 +717,8 @@ const AdminManagementPanel = () => {
   };
 
   const deleteUser = async (userId, userName) => {
+    console.log('deleteUser function called with:', { userId, userName }); // Debug log
+    
     // Enhanced confirmation dialog
     const confirmed = window.confirm(
       `Are you sure you want to delete the user "${userName}"?\n\n` +
@@ -727,13 +729,16 @@ const AdminManagementPanel = () => {
       'This action cannot be undone!'
     );
 
+    console.log('User confirmed deletion:', confirmed); // Debug log
+
     if (!confirmed) {
+      console.log('User cancelled deletion'); // Debug log
       return;
     }
 
     try {
       setDeletingUserId(userId);
-      console.log('Deleting user:', userId); // Debug log
+      console.log('Starting deletion process for user:', userId); // Debug log
       
       const response = await axios.delete(`${API}/admin/users/${userId}`);
       console.log('Delete response:', response.data); // Debug log
@@ -742,6 +747,7 @@ const AdminManagementPanel = () => {
       alert('User deleted successfully!');
       
       // Refresh the users list
+      console.log('Refreshing user list...'); // Debug log
       await fetchUsers();
       
     } catch (error) {
@@ -750,6 +756,7 @@ const AdminManagementPanel = () => {
       alert('Error deleting user: ' + errorMessage);
     } finally {
       setDeletingUserId(null);
+      console.log('Delete process completed'); // Debug log
     }
   };
 
