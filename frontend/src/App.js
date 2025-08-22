@@ -218,6 +218,8 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [analytics, setAnalytics] = useState({});
+  const [enhancedAnalytics, setEnhancedAnalytics] = useState({ per_user: [], sentences_left_overall: 0, irr_pairs: [] });
+  const [tagPrevalence, setTagPrevalence] = useState({ domain_counts: {}, category_counts: {}, tag_counts: {}, valence_counts: {} });
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [sentences, setSentences] = useState([]);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
