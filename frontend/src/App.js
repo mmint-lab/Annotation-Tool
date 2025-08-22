@@ -660,7 +660,8 @@ const Dashboard = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4" id="analytics">
+        <TabsContent value="analytics" className="space-y-6" id="analytics">
+          {/* Top-level counts */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><FileText className="h-5 w-5 text-blue-600" /><div><p className="text-sm text-gray-600">Documents</p><p className="text-2xl font-semibold">{analytics.total_documents || 0}</p></div></div></CardContent></Card>
             <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><Tag className="h-5 w-5 text-green-600" /><div><p className="text-sm text-gray-600">Sentences</p><p className="text-2xl font-semibold">{analytics.total_sentences || 0}</p></div></div></CardContent></Card>
@@ -670,6 +671,110 @@ const Dashboard = () => {
             <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><Tag className="h-5 w-5 text-emerald-600" /><div><p className="text-sm text-gray-600">Tagged Sentences</p><p className="text-2xl font-semibold">{analytics.tagged_sentences || 0}</p></div></div></CardContent></Card>
             <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><SkipForward className="h-5 w-5 text-orange-600" /><div><p className="text-sm text-gray-600">Skipped Sentences</p><p className="text-2xl font-semibold">{analytics.skipped_sentences || 0}</p></div></div></CardContent></Card>
             <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><Users className="h-5 w-5 text-indigo-600" /><div><p className="text-sm text-gray-600">Annotators</p><p className="text-2xl font-semibold">{analytics.unique_annotators || 0}</p></div></div></CardContent></Card>
+          </div>
+
+          {/* Per-user stats */}
+          <Card>
+            <CardHeader><CardTitle>Annotator Stats</CardTitle></CardHeader>
+            <CardContent>
+              <div className="overflow-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-600">
+                      <th className="p-2">Annotator</th>
+                      <th className="p-2">Total</th>
+                      <th className="p-2">Tagged</th>
+                      <th className="p-2">Skipped</th>
+                      <th className="p-2">Sentences Left</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enhancedAnalytics.per_user?.map((u) => (
+                      <tr key={u.user_id} className="border-t">
+                        <td className="p-2">{u.full_name}</td>
+                        <td className="p-2">{u.total}</td>
+                        <td className="p-2">{u.tagged}</td>
+                        <td className="p-2">{u.skipped}</td>
+                        <td className="p-2">{u.sentences_left}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* IRR */}
+          <Card>
+            <CardHeader><CardTitle>Inter-Rater Reliability (Pairwise Jaccard)</CardTitle></CardHeader>
+            <CardContent>
+              {enhancedAnalytics.irr_pairs?.length === 0 ? (
+                <p className="text-sm text-gray-600">Not enough overlapping annotations to compute IRR yet.</p>
+              ) : (
+                <div className="overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-600">
+                        <th className="p-2">Annotator 1</th>
+                        <th className="p-2">Annotator 2</th>
+                        <th className="p-2">Avg Jaccard</th>
+                        <th className="p-2">Common Sentences</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {enhancedAnalytics.irr_pairs?.map((p, idx) => (
+                        <tr key={idx} className="border-t">
+                          <td className="p-2">{p.user1?.slice(-6)}</td>
+                          <td className="p-2">{p.user2?.slice(-6)}</td>
+                          <td className="p-2">{p.avg_jaccard === null ? '-' : p.avg_jaccard.toFixed(3)}</td>
+                          <td className="p-2">{p.common_sentences}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Category counts and valence chart (simple) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader><CardTitle>Category Counts</CardTitle></CardHeader>
+              <CardContent>
+                <div className="max-h-[40vh] overflow-auto space-y-1 text-sm">
+                  {Object.entries(tagPrevalence.category_counts || {}).map(([k, v]) => (
+                    <div key={k} className="flex justify-between border-b py-1">
+                      <span className="truncate pr-4">{k}</span>
+                      <span className="font-medium">{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Valence Distribution</CardTitle></CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-6">
+                  <div className="flex-1">
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Positive</span><span>{tagPrevalence.valence_counts?.positive || 0}</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded">
+                      <div className="h-2 bg-green-500 rounded" style={{ width: `${Math.min(100, (tagPrevalence.valence_counts?.positive || 0) / Math.max(1, (tagPrevalence.valence_counts?.positive || 0) + (tagPrevalence.valence_counts?.negative || 0)) * 100)}%` }}></div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Negative</span><span>{tagPrevalence.valence_counts?.negative || 0}</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded">
+                      <div className="h-2 bg-red-500 rounded" style={{ width: `${Math.min(100, (tagPrevalence.valence_counts?.negative || 0) / Math.max(1, (tagPrevalence.valence_counts?.positive || 0) + (tagPrevalence.valence_counts?.negative || 0)) * 100)}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
