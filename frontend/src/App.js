@@ -788,14 +788,15 @@ const AdminManagementPanel = () => {
         const updatedUsers = currentUsers.filter(user => user.id !== userId);
         console.log(`Force updating users list: ${currentUsers.length} -> ${updatedUsers.length}`);
         
-        // Multiple update approaches to ensure it works
-        setUsers([...updatedUsers]); // Force new array reference
-        setRefreshKey(prev => prev + 1); // Force component re-render
+        // Force complete state refresh
+        setUsers([]);  // Clear first
+        setRefreshKey(prev => prev + 1); // Force re-render
         
-        // Force component re-render
+        // Set new users after a brief delay to ensure re-render
         setTimeout(() => {
-          setUsers(prev => prev.filter(u => u.id !== userId));
-        }, 100);
+          setUsers([...updatedUsers]);
+          setRefreshKey(prev => prev + 1);
+        }, 50);
         
         // Show success message
         alert(`User "${userName}" has been deleted and removed from the list!`);
