@@ -719,42 +719,46 @@ const AdminManagementPanel = () => {
   const deleteUser = async (userId, userName) => {
     console.log('deleteUser function called with:', { userId, userName }); // Debug log
     
-    // Enhanced confirmation dialog
-    const confirmed = window.confirm(
-      `Are you sure you want to delete the user "${userName}"?\n\n` +
-      'This will permanently remove:\n' +
-      '• The user account\n' +
-      '• All their annotations\n' +
-      '• Their login access\n\n' +
-      'This action cannot be undone!'
-    );
-
-    console.log('User confirmed deletion:', confirmed); // Debug log
-
-    if (!confirmed) {
-      console.log('User cancelled deletion'); // Debug log
-      return;
-    }
-
     try {
+      // Enhanced confirmation dialog
+      const confirmed = window.confirm(
+        `Are you sure you want to delete the user "${userName}"?\n\n` +
+        'This will permanently remove:\n' +
+        '• The user account\n' +
+        '• All their annotations\n' +
+        '• Their login access\n\n' +
+        'This action cannot be undone!'
+      );
+
+      console.log('User confirmed deletion:', confirmed); // Debug log
+
+      if (!confirmed) {
+        console.log('User cancelled deletion'); // Debug log
+        return;
+      }
+
+      console.log('Proceeding with deletion...'); // Debug log
       setDeletingUserId(userId);
-      console.log('Starting deletion process for user:', userId); // Debug log
       
+      console.log('Making API call to delete user:', userId); // Debug log
       const response = await axios.delete(`${API}/admin/users/${userId}`);
-      console.log('Delete response:', response.data); // Debug log
+      console.log('Delete API response received:', response.status, response.data); // Debug log
       
       // Show success message
+      console.log('Showing success message'); // Debug log
       alert('User deleted successfully!');
       
       // Refresh the users list
       console.log('Refreshing user list...'); // Debug log
       await fetchUsers();
+      console.log('User list refreshed'); // Debug log
       
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error in deleteUser function:', error);
       const errorMessage = error.response?.data?.detail || 'Failed to delete user. Please try again.';
       alert('Error deleting user: ' + errorMessage);
     } finally {
+      console.log('Cleaning up deletion state'); // Debug log
       setDeletingUserId(null);
       console.log('Delete process completed'); // Debug log
     }
