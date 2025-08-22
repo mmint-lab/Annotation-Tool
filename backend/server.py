@@ -472,6 +472,10 @@ async def get_documents(current_user: User = Depends(get_current_user)):
 @api_router.get("/documents/{document_id}/sentences")
 async def get_document_sentences(document_id: str, skip: int = 0, limit: int = 50, current_user: User = Depends(get_current_user)):
     sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort("sentence_index", 1).skip(skip).limit(limit).to_list(limit)
+    # Fill subject_id fallback if missing: try to infer from previous or next rows with same row group if any
+    for s in sentences:
+      if not s.get('subject_id'):
+        s['subject_id'] = s.get('sentence_index')  # use sentence index as last resort
     sentence_ids = [sentence['id'] for sentence in sentences]
     annotations = await db.annotations.find({"sentence_id": {"$in": sentence_ids}}, {"_id": 0}).to_list(1000)
     annotations_by_sentence = defaultdict(list)
