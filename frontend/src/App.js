@@ -721,7 +721,7 @@ const AdminManagementPanel = () => {
     console.log('deleteUser function called with:', { userId, userName });
     
     // Prevent deleting yourself
-    if (userId === user?.id) {
+    if (userId === currentUser?.id) {
       alert("You cannot delete your own account!");
       return;
     }
