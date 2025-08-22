@@ -806,7 +806,12 @@ const AdminManagementPanel = () => {
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => deleteUser(user.id, user.full_name)}
+                    onClick={(e) => {
+                      console.log('Delete button clicked!', { userId: user.id, userName: user.full_name }); // Debug log
+                      e.preventDefault();
+                      e.stopPropagation();
+                      deleteUser(user.id, user.full_name);
+                    }}
                     disabled={deletingUserId === user.id}
                   >
                     {deletingUserId === user.id ? (
