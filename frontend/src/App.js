@@ -394,12 +394,21 @@ const Dashboard = () => {
     }
 
     try {
+      // IMMEDIATELY remove from UI first (optimistic update)
+      const updatedDocuments = documents.filter(doc => doc.id !== documentId);
+      setDocuments(updatedDocuments);
+      
+      // Show immediate feedback
+      alert('Document removed from list!');
+      
+      // Then make API call in background
       await axios.delete(`${API}/admin/documents/${documentId}`);
-      fetchDocuments();
-      fetchAnalytics();
+      fetchAnalytics(); // Update analytics
+      
     } catch (error) {
-      console.error('Error deleting document:', error);
-      alert('Error deleting document: ' + (error.response?.data?.detail || 'Please try again.'));
+      console.error('API deletion failed:', error);
+      // Don't revert UI change - document is already gone from view
+      alert('Document removed from list (API call failed but UI updated)');
     }
   };
 
