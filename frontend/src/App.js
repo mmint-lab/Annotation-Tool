@@ -905,6 +905,14 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   
   const currentSentence = sentences[currentIndex];
   
+  // Reset form when sentence changes
+  useEffect(() => {
+    setSelectedTags([]);
+    setNotes('');
+    // Scroll to top when sentence changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentIndex]);
+  
   if (!currentSentence) return null;
 
   const addTag = (domain, category, tag) => {
