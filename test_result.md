@@ -505,6 +505,66 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - MongoDB connection working correctly. Uses MONGO_URL and DB_NAME from environment variables. All collections (users, documents, sentences, annotations) accessible."
 
+  - task: "CSV Upload with Subject ID Storage"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - CSV upload with note_id/text columns working correctly. Sentences properly store subject_id from note_id/patient_id columns. GET /api/documents/{id}/sentences returns subject_id field for all sentences."
+
+  - task: "Enhanced Analytics Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/analytics/enhanced endpoint working correctly. Returns per_user stats with user_id/full_name/total/tagged/skipped/sentences_left, sentences_left_overall count, and irr_pairs with avg_jaccard/common_sentences for inter-rater reliability."
+
+  - task: "Messages RBAC System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/messages endpoints working correctly with RBAC. List/post accessible to all users. Delete enforces RBAC: users can delete own messages, admins can delete any message. Proper permission validation implemented."
+
+  - task: "Password Change Security"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/auth/change-password working correctly. Updates password hash in database. Properly validates current password and blocks requests with invalid current password (returns 400 status)."
+
+  - task: "Profile Update Functionality"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/auth/me/profile endpoint working correctly. Updates full_name field in user profile and returns updated user object. Proper authentication required."
+
 frontend:
   - task: "Frontend Testing"
     implemented: true
