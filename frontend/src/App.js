@@ -346,6 +346,7 @@ const Dashboard = () => {
   };
 
   const handleAnnotateClick = (documentId) => {
+    console.log('=== handleAnnotateClick CALLED ===', documentId);
     loadDocumentSentences(documentId);
   };
 
