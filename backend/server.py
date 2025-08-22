@@ -609,15 +609,47 @@ async def get_enhanced_analytics(current_user: User = Depends(get_current_user))
 
 @api_router.get("/analytics/tag-prevalence")
 async def get_tag_prevalence(current_user: User = Depends(get_current_user)):
-    annotations = await db.annotations.find({"skipped": False}, {"_id": 0}).to_list(10000)
+    annotations = await db.annotations.find({"skipped": False}, {"_id": 0}).to_list(100000)
     tag_counts = defaultdict(int); domain_counts = defaultdict(int); category_counts = defaultdict(int); valence_counts = {"positive": 0, "negative": 0}
     for annotation in annotations:
         for tag in annotation.get('tags', []):
-            domain_counts[tag['domain']] += 1
-            category_counts[f"{tag['domain']} - {tag['category']}"] += 1
-            tag_counts[f"{tag['category']} - {tag['tag']}"] += 1
-            valence_counts[tag['valence']] += 1
+            domain_counts[tag.get('domain','')] += 1
+            category_counts[f"{tag.get('domain','')} - {tag.get('category','')}"] += 1
+            tag_counts[f"{tag.get('category','')} - {tag.get('tag','')}"] += 1
+            valence_counts[tag.get('valence','positive' if tag.get('valence') is None else tag.get('valence'))] += 1
     return {"domain_counts": dict(domain_counts), "category_counts": dict(category_counts), "tag_counts": dict(tag_counts), "valence_counts": valence_counts}
+
+@api_router.get("/analytics/tag-prevalence-chart")
+async def get_tag_prevalence_chart(current_user: User = Depends(get_current_user)):
+    """Return a simple PNG chart of category counts using matplotlib."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from io import BytesIO
+
+    # Reuse tag prevalence data
+    annotations = await db.annotations.find({"skipped": False}, {"_id": 0}).to_list(100000)
+    category_counts = defaultdict(int)
+    for annotation in annotations:
+        for tag in annotation.get('tags', []):
+            key = f"{tag.get('domain','')} - {tag.get('category','')}"
+            category_counts[key] += 1
+
+    # Prepare data
+    labels = list(category_counts.keys())[:20]  # Limit to top 20 for readability
+    values = [category_counts[k] for k in labels]
+
+    plt.figure(figsize=(10, 6))
+    plt.barh(labels, values, color='#3b82f6')
+    plt.xlabel('Count')
+    plt.title('Top Category Counts')
+    plt.tight_layout()
+
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+
+    return StreamingResponse(buf, media_type='image/png')
 
 @api_router.get("/admin/analytics/users")
 async def get_user_analytics(admin_user: User = Depends(get_admin_user)):
