@@ -1115,7 +1115,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
             <div className="space-y-2">
               <h4 className="font-medium text-gray-900">Existing Annotations:</h4>
               <div className="space-y-2">
-                {currentSentence.annotations.map((annotation, idx) => {
+                {currentSentence.annotations.map((annotation) => {
                   const canDelete = user?.role === 'admin' || annotation.user_id === user?.id;
                   return (
                     <div key={idx} className="p-3 bg-blue-50 rounded-md">
