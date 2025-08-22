@@ -770,6 +770,7 @@ const AdminManagementPanel = () => {
         
         // Multiple update approaches to ensure it works
         setUsers([...updatedUsers]); // Force new array reference
+        setRefreshKey(prev => prev + 1); // Force component re-render
         
         // Force component re-render
         setTimeout(() => {
