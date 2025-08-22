@@ -288,13 +288,13 @@ const Home = () => {
         <CardContent className="space-y-4">
           <p className="text-gray-700">Use the quick links below to get started.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <Button variant="outline" onClick={() => navigate('/')}>Go to Dashboard</Button>
-            <Button variant="outline" onClick={() => navigate('/#documents')}>Documents</Button>
-            <Button variant="outline" onClick={() => navigate('/#annotate')}>Annotate</Button>
-            <Button variant="outline" onClick={() => navigate('/#resources')}>Resources</Button>
-            <Button variant="outline" onClick={() => navigate('/#analytics')}>Analytics</Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Documents</Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Annotate</Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Resources</Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>Analytics</Button>
             {user?.role === 'admin' && (
-              <Button variant="outline" onClick={() => navigate('/#upload')}>Admin Upload</Button>
+              <Button variant="outline" onClick={() => navigate('/dashboard')}>Admin Upload</Button>
             )}
           </div>
         </CardContent>
