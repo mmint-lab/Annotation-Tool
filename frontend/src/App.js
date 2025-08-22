@@ -445,10 +445,24 @@ const Dashboard = () => {
   const downloadAnnotatedCsv = async (doc) => {
     try {
       const url = `${API}/admin/download/annotated-csv/${doc.id}`;
-      const response = await axios.get(url, { responseType: 'blob' });
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+      const token = localStorage.getItem('token');
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      if (!blob || blob.size === 0) {
+        alert('No data available to download (empty CSV).');
+        return;
+      }
+      const filename = `annotated_${doc.filename || 'document'}.csv`;
       const link = document.createElement('a');
-      const filename = `annotated_${doc.filename}`;
       const urlObj = window.URL.createObjectURL(blob);
       link.href = urlObj;
       link.setAttribute('download', filename);
@@ -456,9 +470,10 @@ const Dashboard = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(urlObj);
+      alert(`Download started. Check your Downloads folder for "${filename}".`);
     } catch (error) {
       console.error('Error downloading CSV:', error);
-      alert('Error downloading CSV: ' + (error.response?.data?.detail || 'Please try again.'));
+      alert('Error downloading CSV: ' + (error.message || 'Please try again.'));
     }
   };
 
