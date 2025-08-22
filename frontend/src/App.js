@@ -1154,7 +1154,11 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
             
             <Button
               variant="outline"
-              onClick={() => onIndexChange(Math.max(0, currentIndex - 1))}
+              onClick={() => {
+                setSelectedTags([]);
+                setNotes('');
+                onIndexChange(Math.max(0, currentIndex - 1));
+              }}
               disabled={currentIndex === 0}
             >
               Previous
@@ -1162,7 +1166,11 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
             
             <Button
               variant="outline"
-              onClick={() => onIndexChange(Math.min(sentences.length - 1, currentIndex + 1))}
+              onClick={() => {
+                setSelectedTags([]);
+                setNotes('');
+                onIndexChange(Math.min(sentences.length - 1, currentIndex + 1));
+              }}
               disabled={currentIndex === sentences.length - 1}
             >
               Next
