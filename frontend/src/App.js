@@ -1080,7 +1080,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           </div>
 
           {/* Existing Annotations */}
-          {currentSentence.annotations && currentSentence.annotations.length &gt; 0 && (
+          {currentSentence.annotations && currentSentence.annotations.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-medium text-gray-900">Existing Annotations:</h4>
               <div className="space-y-2">
