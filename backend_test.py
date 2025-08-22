@@ -9,11 +9,14 @@ class SDOHAPITester:
     def __init__(self, base_url="https://data-tag-collab.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
+        self.admin_token = None
         self.user_id = None
+        self.admin_user_id = None
         self.tests_run = 0
         self.tests_passed = 0
         self.test_document_id = None
         self.test_sentence_id = None
+        self.created_user_ids = []  # Track created users for cleanup
 
     def run_test(self, name, method, endpoint, expected_status, data=None, files=None):
         """Run a single API test"""
