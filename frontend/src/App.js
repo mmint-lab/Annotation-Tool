@@ -660,13 +660,13 @@ const Dashboard = () => {
                       </Button>
                       {user?.role === 'admin' && (
                         <>
-                          <Button
+                          <button
+                            type="button"
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('CSV download clicked'); downloadAnnotatedCsv(doc); }}
-                            variant="secondary"
-                            size="sm"
+                            className="inline-flex items-center justify-center gap-1 h-8 rounded-md px-3 text-xs bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-transparent pointer-events-auto"
                           >
                             <Download className="h-4 w-4 mr-1" /> CSV
-                          </Button>
+                          </button>
                           <Button
                             onClick={() => deleteDocument(doc.id)}
                             variant="destructive"
