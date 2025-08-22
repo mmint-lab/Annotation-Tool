@@ -389,7 +389,7 @@ const Dashboard = () => {
     });
 
     try {
-      await axios.delete(`${API}/annotations/${annotationId}`);
+      await axios.delete(`${API}/annotations/${annotationId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }});
       
       if (sentenceId) {
         await refreshSentenceAnnotations(sentenceId);
