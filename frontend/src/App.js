@@ -660,6 +660,7 @@ const AdminManagementPanel = () => {
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState(null);
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
