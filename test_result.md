@@ -104,6 +104,157 @@
 
 user_problem_statement: "Social Determinants of Health Annotation Tool - Backend API testing for authentication, document management, annotations, and admin functionality"
 
+---
+user_problem_statement: |
+  Web app to upload CSV discharge summaries, split to sentences, multi-user annotation with SDOH structured tags + valence, skip flow, analytics, admin user/doc management, and admin CSV export. Persistent issue: deletion UI not reflecting state. Current priority per user: finish other tasks first (annotation save/skip navigation, annotation deletion, admin CSV download), then fix deletion UI lists.
+
+backend:
+  - task: "Authentication (register, login, me)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Auth endpoints verified with JWT and role enforcement."
+  - task: "Documents upload/list/sentences"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Upload CSV (admin-only), parsed to sentences; listing and retrieval OK."
+  - task: "Annotations create/get/delete"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Create with tags/valence and skipped; fetch per sentence; delete with RBAC OK."
+  - task: "Tag structure endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Static SDOH tag structure returned as designed."
+  - task: "Analytics overview"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Counts for docs/sentences/annotations/skipped/tagged/annotators OK."
+  - task: "Admin CSV download (annotated)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "CSV stream verified; rows per annotation-tag (or single row for skipped)."
+
+frontend:
+  - task: "Annotation save navigation fix (stay on current)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Changed to refresh only current sentence annotations; no full reload so index preserved."
+  - task: "Skip navigation fix (advance to next)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Skip advances to next sentence; last sentence returns to Documents."
+  - task: "Annotation deletion UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Add delete buttons for own/admin annotations; refresh only that sentence on delete."
+  - task: "Admin CSV download button"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added CSV download button per document for admins; uses backend stream and blob download."
+  - task: "User/Document deletion UI refresh"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 3
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Still not working as expected; entries persist visually (most recent report)."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Frontend: verify save/skip navigation behavior"
+    - "Frontend: verify annotation deletion refresh"
+    - "Frontend: verify admin CSV download"
+  stuck_tasks:
+    - "Deletion UI (users/documents) not updating visually"
+  test_all: false
+  test_priority: "sequential"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      Implemented save/skip navigation fixes, per-sentence annotation refresh, UI for annotation deletion with RBAC check, and admin CSV download end-to-end. Backend fully tested via testing agent (all pass). Awaiting user confirmation to run frontend automated tests or for manual validation. Next priority (per user): fix Deletion UI after above features verified.
+
+
 backend:
   - task: "Authentication - User Registration"
     implemented: true
