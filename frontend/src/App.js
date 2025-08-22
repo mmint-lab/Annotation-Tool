@@ -759,19 +759,30 @@ const AdminManagementPanel = () => {
       const response = await axios.delete(`${API}/admin/users/${userId}`);
       console.log('Delete response:', response.status, response.data);
       
+      // Immediately remove the user from the UI state (optimistic update)
+      console.log('Optimistically removing user from UI...');
+      setUsers(prevUsers => {
+        const updatedUsers = prevUsers.filter(user => user.id !== userId);
+        console.log(`Removed user from state. User count: ${prevUsers.length} -> ${updatedUsers.length}`);
+        return updatedUsers;
+      });
+      
       // Show success message
       alert(`User "${userName}" deleted successfully!`);
       
-      // Force refresh the users list
-      console.log('Refreshing user list...');
-      await fetchUsers();
-      console.log('User list refresh completed');
+      // Also refresh from server to ensure consistency (but don't wait for it)
+      fetchUsers().catch(error => {
+        console.error('Error refreshing user list after deletion:', error);
+      });
       
     } catch (error) {
       console.error('Error during deletion:', error);
       console.error('Error response:', error.response);
       const errorMessage = error.response?.data?.detail || 'Failed to delete user. Please try again.';
       alert('Error deleting user: ' + errorMessage);
+      
+      // Refresh the list in case of error to ensure accuracy
+      await fetchUsers();
     } finally {
       console.log('Cleaning up loading state');
       setDeletingUserId(null);
