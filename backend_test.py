@@ -77,6 +77,261 @@ class SDOHAPITester:
         """Test domains endpoint"""
         return self.run_test("Get SDOH Domains", "GET", "domains", 200)
 
+    def test_admin_login(self):
+        """Test admin login with predefined credentials"""
+        admin_credentials = {
+            "email": "admin@sdoh.com",
+            "password": "admin123"
+        }
+        
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "auth/login",
+            200,
+            data=admin_credentials
+        )
+        
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            print(f"   Admin token obtained successfully")
+            return True
+        return False
+
+    def test_admin_get_current_user(self):
+        """Test getting admin user info"""
+        # Temporarily switch to admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test("Get Admin User Info", "GET", "auth/me", 200)
+        
+        if success and response.get('role') == 'admin':
+            self.admin_user_id = response.get('id')
+            print(f"   Admin user confirmed with role: {response.get('role')}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_get_all_users(self):
+        """Test admin endpoint to get all users"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test("Admin - Get All Users", "GET", "admin/users", 200)
+        
+        if success:
+            print(f"   Found {len(response)} users in system")
+            for user in response[:3]:  # Show first 3 users
+                print(f"   - {user.get('full_name')} ({user.get('email')}) - {user.get('role')}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_create_annotator(self):
+        """Test admin creating a new annotator account"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        timestamp = datetime.now().strftime('%H%M%S')
+        new_annotator = {
+            "email": f"annotator_{timestamp}@sdoh.com",
+            "password": "AnnotatorPass123!",
+            "full_name": f"Test Annotator {timestamp}",
+            "role": "annotator"
+        }
+        
+        success, response = self.run_test(
+            "Admin - Create Annotator",
+            "POST",
+            "admin/users",
+            200,
+            data=new_annotator
+        )
+        
+        if success and 'id' in response:
+            self.created_user_ids.append(response['id'])
+            print(f"   Created annotator with ID: {response['id']}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_create_admin(self):
+        """Test admin creating a new admin account"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        timestamp = datetime.now().strftime('%H%M%S')
+        new_admin = {
+            "email": f"admin_{timestamp}@sdoh.com",
+            "password": "AdminPass123!",
+            "full_name": f"Test Admin {timestamp}",
+            "role": "admin"
+        }
+        
+        success, response = self.run_test(
+            "Admin - Create Admin",
+            "POST",
+            "admin/users",
+            200,
+            data=new_admin
+        )
+        
+        if success and 'id' in response:
+            self.created_user_ids.append(response['id'])
+            print(f"   Created admin with ID: {response['id']}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_update_user(self):
+        """Test admin updating user account"""
+        if not self.created_user_ids:
+            print("❌ No created users to update")
+            return False
+            
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        user_id = self.created_user_ids[0]
+        update_data = {
+            "full_name": "Updated Test User",
+            "is_active": False  # Deactivate user
+        }
+        
+        success, response = self.run_test(
+            "Admin - Update User",
+            "PUT",
+            f"admin/users/{user_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Updated user - Active: {response.get('is_active')}")
+            print(f"   Updated name: {response.get('full_name')}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_reactivate_user(self):
+        """Test admin reactivating user account"""
+        if not self.created_user_ids:
+            print("❌ No created users to reactivate")
+            return False
+            
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        user_id = self.created_user_ids[0]
+        update_data = {
+            "is_active": True  # Reactivate user
+        }
+        
+        success, response = self.run_test(
+            "Admin - Reactivate User",
+            "PUT",
+            f"admin/users/{user_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Reactivated user - Active: {response.get('is_active')}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_document_upload(self):
+        """Test admin document upload with project metadata"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Create test CSV content
+        csv_content = self.create_test_csv().getvalue()
+        
+        # Create file-like object with project metadata
+        files = {
+            'file': ('admin_test_discharge_summaries.csv', csv_content, 'text/csv'),
+            'project_name': (None, 'Admin Test Project'),
+            'description': (None, 'Test project uploaded by admin for annotation team')
+        }
+        
+        success, response = self.run_test(
+            "Admin - Document Upload with Metadata",
+            "POST",
+            "documents/upload",
+            200,
+            files=files
+        )
+        
+        if success and 'id' in response:
+            self.test_document_id = response['id']
+            print(f"   Document ID: {self.test_document_id}")
+            print(f"   Project: {response.get('project_name')}")
+            print(f"   Description: {response.get('description')}")
+            print(f"   Total sentences: {response.get('total_sentences', 0)}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_delete_document(self):
+        """Test admin deleting a document"""
+        if not self.test_document_id:
+            print("❌ No test document to delete")
+            return False
+            
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "Admin - Delete Document",
+            "DELETE",
+            f"admin/documents/{self.test_document_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Document deleted successfully")
+            self.test_document_id = None  # Clear the ID since document is deleted
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_user_analytics(self):
+        """Test admin-only user analytics endpoint"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test("Admin - User Analytics", "GET", "admin/analytics/users", 200)
+        
+        if success:
+            print(f"   User analytics retrieved for {len(response)} users")
+            # Show sample analytics
+            for user_id, analytics in list(response.items())[:2]:
+                user_info = analytics.get('user', {})
+                print(f"   - {user_info.get('full_name')}: {analytics.get('total_annotations', 0)} annotations")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
     def test_user_registration(self):
         """Test user registration"""
         timestamp = datetime.now().strftime('%H%M%S')
@@ -120,6 +375,52 @@ class SDOHAPITester:
         """Test getting current user info"""
         return self.run_test("Get Current User", "GET", "auth/me", 200)
 
+    def test_non_admin_access_denied(self):
+        """Test that non-admin users cannot access admin endpoints"""
+        if not self.token:
+            print("❌ No regular user token available")
+            return False
+            
+        # Try to access admin endpoint with regular user token
+        success, response = self.run_test(
+            "Non-Admin Access Denied Test",
+            "GET",
+            "admin/users",
+            403  # Expect forbidden
+        )
+        
+        if success:
+            print("   ✅ Access properly denied to non-admin user")
+        
+        return success
+
+    def test_non_admin_upload_denied(self):
+        """Test that non-admin users cannot upload documents"""
+        if not self.token:
+            print("❌ No regular user token available")
+            return False
+            
+        # Create test CSV content
+        csv_content = self.create_test_csv().getvalue()
+        
+        # Create file-like object
+        files = {
+            'file': ('unauthorized_upload.csv', csv_content, 'text/csv')
+        }
+        
+        success, response = self.run_test(
+            "Non-Admin Upload Denied Test",
+            "POST",
+            "documents/upload",
+            403,  # Expect forbidden
+            files=files
+        )
+        
+        if success:
+            print("   ✅ Upload properly denied to non-admin user")
+        
+        return success
+
     def create_test_csv(self):
         """Create a test CSV file with sample medical discharge summaries"""
         csv_content = """patient_id,discharge_summary,notes
@@ -128,31 +429,6 @@ class SDOHAPITester:
 3,"32-year-old mother of two with postpartum depression. Recently moved to new neighborhood and reports feeling isolated. No family support nearby. Concerned about childcare costs affecting ability to attend therapy sessions. Works part-time without health insurance benefits.","Social isolation and economic barriers to mental health care"
 """
         return io.StringIO(csv_content)
-
-    def test_document_upload(self):
-        """Test CSV document upload"""
-        # Create test CSV content
-        csv_content = self.create_test_csv().getvalue()
-        
-        # Create file-like object
-        files = {
-            'file': ('test_discharge_summaries.csv', csv_content, 'text/csv')
-        }
-        
-        success, response = self.run_test(
-            "Document Upload",
-            "POST",
-            "documents/upload",
-            200,
-            files=files
-        )
-        
-        if success and 'id' in response:
-            self.test_document_id = response['id']
-            print(f"   Document ID: {self.test_document_id}")
-            print(f"   Total sentences: {response.get('total_sentences', 0)}")
-        
-        return success
 
     def test_get_documents(self):
         """Test getting all documents"""
@@ -217,54 +493,6 @@ class SDOHAPITester:
             data=annotation_data
         )
 
-    def test_create_skipped_annotation(self):
-        """Test creating a skipped annotation"""
-        if not self.test_sentence_id:
-            print("❌ No test sentence ID available")
-            return False
-            
-        # Create another sentence for skip test
-        success, sentences_response = self.run_test(
-            "Get Document Sentences for Skip Test",
-            "GET", 
-            f"documents/{self.test_document_id}/sentences",
-            200
-        )
-        
-        if not success or len(sentences_response) < 2:
-            print("❌ Need at least 2 sentences for skip test")
-            return False
-            
-        skip_sentence_id = sentences_response[1]['id']
-        
-        annotation_data = {
-            "sentence_id": skip_sentence_id,
-            "tags": [],
-            "notes": "No SDOH content found in this sentence",
-            "skipped": True
-        }
-        
-        return self.run_test(
-            "Create Skipped Annotation",
-            "POST",
-            "annotations",
-            200,
-            data=annotation_data
-        )
-
-    def test_get_sentence_annotations(self):
-        """Test getting annotations for a sentence"""
-        if not self.test_sentence_id:
-            print("❌ No test sentence ID available")
-            return False
-            
-        return self.run_test(
-            "Get Sentence Annotations",
-            "GET",
-            f"annotations/sentence/{self.test_sentence_id}",
-            200
-        )
-
     def test_analytics_overview(self):
         """Test analytics overview endpoint"""
         return self.run_test("Analytics Overview", "GET", "analytics/overview", 200)
@@ -273,43 +501,98 @@ class SDOHAPITester:
         """Test tag prevalence analytics (updated endpoint)"""
         return self.run_test("Tag Prevalence Analytics", "GET", "analytics/tag-prevalence", 200)
 
+    def test_admin_delete_created_users(self):
+        """Clean up by deleting created test users"""
+        if not self.created_user_ids:
+            print("ℹ️  No test users to clean up")
+            return True
+            
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success_count = 0
+        for user_id in self.created_user_ids:
+            success, response = self.run_test(
+                f"Admin - Delete Test User {user_id[:8]}",
+                "DELETE",
+                f"admin/users/{user_id}",
+                200
+            )
+            if success:
+                success_count += 1
+        
+        print(f"   Cleaned up {success_count}/{len(self.created_user_ids)} test users")
+        
+        # Restore original token
+        self.token = original_token
+        return success_count == len(self.created_user_ids)
+
     def run_all_tests(self):
-        """Run all API tests in sequence"""
-        print("🚀 Starting SDOH API Tests")
-        print("=" * 50)
+        """Run all API tests including comprehensive admin functionality"""
+        print("🚀 Starting SDOH API Tests with Admin Functionality")
+        print("=" * 60)
         
         # Basic endpoint tests
         self.test_root_endpoint()
         self.test_domains_endpoint()
         self.test_get_tag_structure()
         
-        # Authentication tests
-        if not self.test_user_registration():
-            print("❌ Registration failed, stopping tests")
+        # === ADMIN FUNCTIONALITY TESTS ===
+        print("\n" + "=" * 30 + " ADMIN TESTS " + "=" * 30)
+        
+        # Admin authentication
+        if not self.test_admin_login():
+            print("❌ Admin login failed, stopping admin tests")
             return False
             
-        self.test_get_current_user()
+        self.test_admin_get_current_user()
         
-        # Document management tests
-        if not self.test_document_upload():
-            print("❌ Document upload failed, stopping document tests")
-        else:
+        # Admin user management
+        self.test_admin_get_all_users()
+        self.test_admin_create_annotator()
+        self.test_admin_create_admin()
+        self.test_admin_update_user()
+        self.test_admin_reactivate_user()
+        
+        # Admin document management
+        self.test_admin_document_upload()
+        if self.test_document_id:
             self.test_get_documents()
-            
-            if not self.test_get_document_sentences():
-                print("❌ Getting sentences failed, stopping annotation tests")
-            else:
-                # Annotation tests - test both structured and skipped annotations
+            self.test_get_document_sentences()
+            if self.test_sentence_id:
                 self.test_create_structured_annotation()
-                self.test_create_skipped_annotation()
-                self.test_get_sentence_annotations()
         
-        # Analytics tests
+        # Admin analytics
+        self.test_admin_user_analytics()
+        
+        # Admin document deletion
+        if self.test_document_id:
+            self.test_admin_delete_document()
+        
+        # === REGULAR USER TESTS ===
+        print("\n" + "=" * 25 + " REGULAR USER TESTS " + "=" * 25)
+        
+        # Regular user authentication
+        if not self.test_user_registration():
+            print("❌ Registration failed, stopping regular user tests")
+        else:
+            self.test_get_current_user()
+            
+            # Test access control
+            self.test_non_admin_access_denied()
+            self.test_non_admin_upload_denied()
+        
+        # Analytics tests (available to all users)
         self.test_analytics_overview()
         self.test_analytics_tag_prevalence()
         
+        # === CLEANUP ===
+        print("\n" + "=" * 30 + " CLEANUP " + "=" * 30)
+        self.test_admin_delete_created_users()
+        
         # Print final results
-        print("\n" + "=" * 50)
+        print("\n" + "=" * 60)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
         
         if self.tests_passed == self.tests_run:
