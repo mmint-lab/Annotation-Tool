@@ -1118,7 +1118,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                 {currentSentence.annotations.map((annotation) => {
                   const canDelete = user?.role === 'admin' || annotation.user_id === user?.id;
                   return (
-                    <div key={idx} className="p-3 bg-blue-50 rounded-md">
+                    <div key={annotation.id} className="p-3 bg-blue-50 rounded-md">
                       {annotation.skipped ? (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
