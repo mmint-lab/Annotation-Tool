@@ -741,7 +741,9 @@ const AdminManagementPanel = () => {
       setDeletingUserId(userId);
       
       console.log('Making API call to delete user:', userId); // Debug log
-      const response = await axios.delete(`${API}/admin/users/${userId}`);
+      const response = await axios.delete(`${API}/admin/users/${userId}`, {
+        timeout: 10000 // 10 second timeout
+      });
       console.log('Delete API response received:', response.status, response.data); // Debug log
       
       // Show success message
