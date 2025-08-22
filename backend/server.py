@@ -265,13 +265,13 @@ def split_into_sentences(text: str) -> List[str]:
     text = re.sub(r'\s+', ' ', text.strip())
     
     # Split on sentence endings, but be careful with abbreviations
-    sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
+    sentences = re.split(r'(?&lt;=[.!?])\s+(?=[A-Z])', text)
     
     # Filter out very short sentences and clean up
     cleaned_sentences = []
     for sentence in sentences:
         sentence = sentence.strip()
-        if len(sentence) > 10:  # Minimum sentence length
+        if len(sentence) &gt; 10:  # Minimum sentence length
             cleaned_sentences.append(sentence)
     
     return cleaned_sentences
@@ -734,6 +734,74 @@ async def get_user_analytics(admin_user: User = Depends(get_admin_user)):
         }
     
     return user_annotations
+
+@api_router.get("/admin/download/annotated-csv/{document_id}")
+async def download_annotated_csv(document_id: str, admin_user: User = Depends(get_admin_user)):
+    """Admin only: Download annotated CSV for a document.
+    One row per annotation-tag pair (or one row if skipped)."""
+    # Fetch document for filename metadata
+    document = await db.documents.find_one({"id": document_id}, {"_id": 0})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # Fetch sentences for the document
+    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort("sentence_index", 1).to_list(100000)
+    sentence_ids = [s["id"] for s in sentences]
+
+    # Fetch annotations for these sentences in one query
+    annotations = await db.annotations.find({"sentence_id": {"$in": sentence_ids}}, {"_id": 0}).to_list(100000)
+    ann_by_sentence: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for a in annotations:
+        ann_by_sentence[a["sentence_id"]].append(a)
+
+    # Build CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    header = [
+        "document_id", "document_filename", "project_name", "description",
+        "sentence_id", "sentence_index", "sentence_text",
+        "annotation_id", "annotated_by_user_id", "skipped", "notes",
+        "domain", "category", "tag", "valence", "annotated_at"
+    ]
+    writer.writerow(header)
+
+    for s in sentences:
+        anns = ann_by_sentence.get(s["id"], [])
+        if not anns:
+            # Optionally, skip sentences without annotations to keep file compact
+            continue
+        for ann in anns:
+            created_at = ann.get("created_at")
+            created_at_str = created_at.isoformat() if isinstance(created_at, datetime) else str(created_at)
+            if ann.get("skipped", False):
+                writer.writerow([
+                    document_id, document.get("filename"), document.get("project_name"), document.get("description"),
+                    s.get("id"), s.get("sentence_index"), s.get("text"),
+                    ann.get("id"), ann.get("user_id"), True, ann.get("notes", ""),
+                    "", "", "", "", created_at_str
+                ])
+            else:
+                tags = ann.get("tags", [])
+                if not tags:
+                    writer.writerow([
+                        document_id, document.get("filename"), document.get("project_name"), document.get("description"),
+                        s.get("id"), s.get("sentence_index"), s.get("text"),
+                        ann.get("id"), ann.get("user_id"), False, ann.get("notes", ""),
+                        "", "", "", "", created_at_str
+                    ])
+                else:
+                    for t in tags:
+                        writer.writerow([
+                            document_id, document.get("filename"), document.get("project_name"), document.get("description"),
+                            s.get("id"), s.get("sentence_index"), s.get("text"),
+                            ann.get("id"), ann.get("user_id"), False, ann.get("notes", ""),
+                            t.get("domain", ""), t.get("category", ""), t.get("tag", ""), t.get("valence", ""), created_at_str
+                        ])
+
+    csv_bytes = output.getvalue().encode("utf-8")
+    filename = f"annotated_{document.get('filename', document_id)}.csv"
+    headers = {"Content-Disposition": f"attachment; filename=\"{filename}\""}
+    return StreamingResponse(iter([csv_bytes]), media_type="text/csv", headers=headers)
 
 # System Routes
 @api_router.get("/")

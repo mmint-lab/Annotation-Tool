@@ -15,7 +15,7 @@ import { Checkbox } from "./components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Separator } from "./components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
-import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Plus, X, SkipForward, Shield, Settings, Trash2, Edit, Eye } from "lucide-react";
+import { FileText, Users, BarChart3, Upload, User, LogOut, Tag, CheckCircle, Plus, X, SkipForward, Shield, Settings, Trash2, Edit, Eye, Download } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -360,7 +360,16 @@ const Dashboard = () => {
     }
   };
 
-  const deleteAnnotation = async (annotationId) => {
+  const refreshSentenceAnnotations = async (sentenceId) => {
+    try {
+      const res = await axios.get(`${API}/annotations/sentence/${sentenceId}`);
+      setSentences((prev) => prev.map((s) => (s.id === sentenceId ? { ...s, annotations: res.data } : s)));
+    } catch (err) {
+      console.error('Error refreshing sentence annotations', err);
+    }
+  };
+
+  const deleteAnnotation = async (annotationId, sentenceId) => {
     if (!window.confirm('Are you sure you want to delete this annotation?')) {
       return;
     }
@@ -368,9 +377,11 @@ const Dashboard = () => {
     try {
       await axios.delete(`${API}/annotations/${annotationId}`);
       
-      // Refresh sentences to show updated annotations
-      if (selectedDocument) {
-        loadDocumentSentences(selectedDocument);
+      if (sentenceId) {
+        await refreshSentenceAnnotations(sentenceId);
+      } else if (selectedDocument) {
+        // Fallback: refresh all
+        await loadDocumentSentences(selectedDocument);
       }
       
       // Refresh analytics
@@ -396,10 +407,8 @@ const Dashboard = () => {
         skipped: skipped
       });
       
-      // Refresh sentences to show new annotation
-      if (selectedDocument) {
-        loadDocumentSentences(selectedDocument);
-      }
+      // Refresh just this sentence's annotations to avoid resetting index
+      await refreshSentenceAnnotations(sentenceId);
       
       // Refresh analytics
       fetchAnalytics();
@@ -430,6 +439,26 @@ const Dashboard = () => {
       console.error('API deletion failed:', error);
       // Don't revert UI change - document is already gone from view
       alert('Document removed from list (API call failed but UI updated)');
+    }
+  };
+
+  const downloadAnnotatedCsv = async (doc) => {
+    try {
+      const url = `${API}/admin/download/annotated-csv/${doc.id}`;
+      const response = await axios.get(url, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const filename = `annotated_${doc.filename}`;
+      const urlObj = window.URL.createObjectURL(blob);
+      link.href = urlObj;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(urlObj);
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+      alert('Error downloading CSV: ' + (error.response?.data?.detail || 'Please try again.'));
     }
   };
 
@@ -564,6 +593,7 @@ const Dashboard = () => {
               onIndexChange={setCurrentSentenceIndex}
               tagStructure={tagStructure}
               onAnnotate={createAnnotation}
+              onDeleteAnnotation={deleteAnnotation}
             />
           )}
         </TabsContent>
@@ -596,13 +626,22 @@ const Dashboard = () => {
                         Annotate
                       </Button>
                       {user?.role === 'admin' && (
-                        <Button
-                          onClick={() => deleteDocument(doc.id)}
-                          variant="destructive"
-                          size="sm"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <>
+                          <Button
+                            onClick={() => downloadAnnotatedCsv(doc)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            <Download className="h-4 w-4 mr-1" /> CSV
+                          </Button>
+                          <Button
+                            onClick={() => deleteDocument(doc.id)}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -943,7 +982,8 @@ const AdminManagementPanel = () => {
   );
 };
 
-const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange, tagStructure, onAnnotate }) => {
+const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange, tagStructure, onAnnotate, onDeleteAnnotation }) => {
+  const { user } = useAuth();
   const [selectedTags, setSelectedTags] = useState([]);
   const [notes, setNotes] = useState('');
   
@@ -1040,52 +1080,67 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           </div>
 
           {/* Existing Annotations */}
-          {currentSentence.annotations && currentSentence.annotations.length > 0 && (
+          {currentSentence.annotations && currentSentence.annotations.length &gt; 0 && (
             <div className="space-y-2">
               <h4 className="font-medium text-gray-900">Existing Annotations:</h4>
               <div className="space-y-2">
-                {currentSentence.annotations.map((annotation, idx) => (
-                  <div key={idx} className="p-3 bg-blue-50 rounded-md">
-                    {annotation.skipped ? (
-                      <div className="flex items-center space-x-2">
-                        <SkipForward className="h-4 w-4 text-orange-600" />
-                        <span className="text-sm text-gray-600">
-                          Skipped by User {annotation.user_id.slice(-6)}
-                        </span>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-sm text-gray-600">
-                            by User {annotation.user_id.slice(-6)}
-                          </span>
+                {currentSentence.annotations.map((annotation, idx) => {
+                  const canDelete = user?.role === 'admin' || annotation.user_id === user?.id;
+                  return (
+                    <div key={idx} className="p-3 bg-blue-50 rounded-md">
+                      {annotation.skipped ? (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <SkipForward className="h-4 w-4 text-orange-600" />
+                            <span className="text-sm text-gray-600">
+                              Skipped by User {annotation.user_id.slice(-6)}
+                            </span>
+                          </div>
+                          {canDelete && (
+                            <Button size="sm" variant="ghost" onClick={() => onDeleteAnnotation(annotation.id, currentSentence.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {annotation.tags.map((tag, tagIdx) => (
-                            <Badge 
-                              key={tagIdx} 
-                              variant={tag.valence === 'positive' ? 'default' : 'destructive'}
-                              className="text-xs"
-                            >
-                              {tag.domain}: {tag.tag} ({tag.valence})
-                            </Badge>
-                          ))}
+                      ) : (
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm text-gray-600">
+                              by User {annotation.user_id.slice(-6)}
+                            </span>
+                            {canDelete && (
+                              <Button size="sm" variant="ghost" onClick={() => onDeleteAnnotation(annotation.id, currentSentence.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {annotation.tags.map((tag, tagIdx) => (
+                              <Badge 
+                                key={tagIdx} 
+                                variant={tag.valence === 'positive' ? 'default' : 'destructive'}
+                                className="text-xs"
+                              >
+                                {tag.domain}: {tag.tag} ({tag.valence})
+                              </Badge>
+                            ))}
+                          </div>
+                          {annotation.notes && (
+                            <p className="text-sm text-gray-600">
+                              Notes: {annotation.notes}
+                            </p>
+                          )}
                         </div>
-                        {annotation.notes && (
-                          <p className="text-sm text-gray-600">
-                            Notes: {annotation.notes}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* Selected Tags Display */}
-          {selectedTags.length > 0 && (
+          {selectedTags.length &gt; 0 && (
             <div className="space-y-2">
               <h4 className="font-medium text-gray-900">Selected Tags:</h4>
               <div className="space-y-2">
