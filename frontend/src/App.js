@@ -554,6 +554,8 @@ const Dashboard = () => {
         )}
 
         <TabsContent value="annotate" className="space-y-4">
+          {/* Active documents for current user; admins can toggle team */}
+          <ActiveDocsPanel onOpenDoc={(docId) => loadDocumentSentences(docId)} />
           {!selectedDocument ? (
             <Card>
               <CardContent className="text-center py-8">
