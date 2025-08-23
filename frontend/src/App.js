@@ -753,37 +753,13 @@ const Dashboard = () => {
             <Card>
               <CardHeader><CardTitle>Category Counts</CardTitle></CardHeader>
               <CardContent>
-                <div className="max-h-[40vh] overflow-auto space-y-1 text-sm">
-                  {Object.entries(tagPrevalence.category_counts || {}).map(([k, v]) => (
-                    <div key={k} className="flex justify-between border-b py-1">
-                      <span className="truncate pr-4">{k}</span>
-                      <span className="font-medium">{v}</span>
-                    </div>
-                  ))}
-                </div>
+                <img src={`${API}/analytics/tag-prevalence-chart`} alt="Category Counts Chart" className="w-full rounded border" />
               </CardContent>
             </Card>
             <Card>
               <CardHeader><CardTitle>Valence Distribution</CardTitle></CardHeader>
               <CardContent>
-                <div className="flex items-center gap-6">
-                  <div className="flex-1">
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>Positive</span><span>{tagPrevalence.valence_counts?.positive || 0}</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded">
-                      <div className="h-2 bg-green-500 rounded" style={{ width: `${Math.min(100, (tagPrevalence.valence_counts?.positive || 0) / Math.max(1, (tagPrevalence.valence_counts?.positive || 0) + (tagPrevalence.valence_counts?.negative || 0)) * 100)}%` }}></div>
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>Negative</span><span>{tagPrevalence.valence_counts?.negative || 0}</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded">
-                      <div className="h-2 bg-red-500 rounded" style={{ width: `${Math.min(100, (tagPrevalence.valence_counts?.negative || 0) / Math.max(1, (tagPrevalence.valence_counts?.positive || 0) + (tagPrevalence.valence_counts?.negative || 0)) * 100)}%` }}></div>
-                    </div>
-                  </div>
-                </div>
+                <img src={`${API}/analytics/valence-chart`} alt="Valence Distribution Chart" className="w-80 h-80" />
               </CardContent>
             </Card>
           </div>
