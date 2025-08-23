@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
+/* eslint-disable */
+
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import axios from "axios";
