@@ -256,13 +256,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Frontend: verify save/skip navigation behavior"
-    - "Frontend: verify annotation deletion refresh"
-    - "Frontend: verify admin CSV download"
+    - "Document deletion UI buttons visibility issue"
   stuck_tasks:
-    - "Deletion UI (users/documents) not updating visually"
+    - "User/Document deletion UI refresh - delete buttons not visible"
   test_all: false
-  test_priority: "sequential"
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
