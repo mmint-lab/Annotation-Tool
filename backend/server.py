@@ -131,20 +131,44 @@ async def get_projects_analytics(current_user: User = Depends(get_current_user))
 
 @api_router.get("/analytics/projects-chart")
 async def get_projects_chart(current_user: User = Depends(get_current_user)):
+    """
+    Stacked bar chart (Option B): Completed vs Remaining sentences per project.
+    - Completed = annotated_sentences
+    - Remaining = total_sentences - annotated_sentences (min 0)
+    """
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from io import BytesIO
+
     # Prepare data from projects analytics
     data = await get_projects_analytics(current_user)
     if not data:
         data = []
-    labels = [d['project_name'] for d in data][:20]
-    values = [d['annotated_sentences'] for d in data][:20]
-    plt.figure(figsize=(10, 6))
-    plt.barh(labels, values, color='#2563eb')
-    plt.xlabel('Annotated Sentences'); plt.title('Projects by Annotated Sentences'); plt.tight_layout()
-    buf = BytesIO(); plt.savefig(buf, format='png'); buf.seek(0)
+
+    # Limit to top 20 by total_sentences for readability
+    data = data[:20]
+
+    labels = [d['project_name'] for d in data]
+    completed = [int(d.get('annotated_sentences') or 0) for d in data]
+    totals = [int(d.get('total_sentences') or 0) for d in data]
+    remaining = [max(t - c, 0) for t, c in zip(totals, completed)]
+
+    # Build stacked horizontal bars
+    plt.figure(figsize=(12, 7))
+    y_pos = range(len(labels))
+    plt.barh(y_pos, completed, color='#16a34a', label='Completed (Annotated)')
+    plt.barh(y_pos, remaining, left=completed, color='#93c5fd', label='Remaining')
+
+    plt.yticks(y_pos, labels)
+    plt.xlabel('Sentences')
+    plt.title('Project Progress: Completed vs Remaining Sentences')
+    plt.legend(loc='lower right')
+    plt.tight_layout()
+
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
 
 # ... rest of server remains unchanged ...
