@@ -250,9 +250,9 @@ backend:
 frontend:
   - task: "Projects Overview analytics (stacked chart + table)"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: true
     status_history:
@@ -262,13 +262,16 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ PARTIAL FAILURE - Projects Overview section found with all required table columns (Project, Docs, Sentences, Annotated, Progress, Annotators, Last Activity) and 2 data rows with progress bars. However, stacked chart image from /api/analytics/projects-chart fails to load (naturalWidth: 0) due to 403 authentication error. Table functionality works correctly but chart image is broken."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL FAILURE - Admin tab is not visible in the UI despite user having admin privileges (Admin User badge visible in header). Projects Overview section cannot be accessed because Admin tab is missing from the tab navigation. This is a major UI issue preventing access to admin analytics features. The tab structure shows Documents, Annotate, Resources but no Admin tab."
   - task: "Subject filter in Manage Annotations modal"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -276,6 +279,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ SUCCESS - Subject filter in Manage Annotations modal working correctly. Found all required filter elements: Annotator, Type, Subject, and Text search. Subject dropdown present with 'All' option (no unique subject_id values in current test data). Modal opens properly, all filters are functional, and Delete selected button is available. Combined filtering capability confirmed."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL FAILURE - Manage Annotations buttons are not visible in the Documents tab despite having 4 documents and admin user privileges. The admin-specific features (Manage Annotations, CSV download, Delete buttons) are not showing up in the document cards. This prevents testing of the Subject filter functionality as the modal cannot be opened."
   - task: "Annotation save navigation fix (stay on current)"
     implemented: true
     working: true
