@@ -505,6 +505,24 @@ const Dashboard = () => {
     }
   };
 
+  const downloadAnnotatedCsvInline = async (doc) => {
+    try {
+      const url = `${API}/admin/download/annotated-csv-inline/${doc.id}`;
+      const token = localStorage.getItem('token');
+      const res = await fetch(url, { method: 'GET', headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) { throw new Error(await res.text() || `HTTP ${res.status}`); }
+      const blob = await res.blob();
+      if (!blob || blob.size === 0) { alert('No data available to download (empty CSV).'); return; }
+      const filename = `annotated_inline_${doc.filename || 'document'}.csv`;
+      const link = document.createElement('a');
+      const urlObj = window.URL.createObjectURL(blob);
+      link.href = urlObj; link.setAttribute('download', filename);
+      document.body.appendChild(link); link.click(); document.body.removeChild(link); window.URL.revokeObjectURL(urlObj);
+    } catch (error) {
+      alert('Error downloading CSV: ' + (error.message || 'Please try again.'));
+    }
+  };
+
   const uploadResource = async () => {
     if (!resourceFile) return;
     const form = new FormData(); form.append('file', resourceFile);
