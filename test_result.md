@@ -464,6 +464,30 @@ agent_communication:
       - Test data creation and cleanup working properly
       - All chart endpoints return proper content-type headers
 
+  - agent: "testing"
+    message: |
+      ✅ FOCUSED PROJECTS-CHART ENDPOINT RE-TESTING COMPLETED - All specific requirements from review request verified successfully:
+      
+      AUTHENTICATION SCENARIOS TESTED:
+      1. ✅ Unauthenticated GET returns 401 (as required)
+      2. ✅ Authenticated via Bearer token returns 200 image/png (26611 bytes)
+      3. ✅ Authenticated via token query param (?token=...) returns 200 image/png (26611 bytes)
+      4. ✅ Data integrity verified: all projects have non-negative remaining sentences (total >= annotated)
+      5. ✅ /api/analytics/projects smoke check passed with all required fields
+      
+      TECHNICAL FIXES APPLIED:
+      - Fixed query parameter authentication by implementing optional authentication dependency
+      - Updated endpoint to properly handle both Bearer token and query parameter authentication
+      - Verified PNG image generation with proper content-type headers
+      - Confirmed stacked chart logic: remaining = max(total - annotated, 0)
+      
+      SAMPLE DATA VERIFIED:
+      - Project "Unassigned": total=28, annotated=6, remaining=22 (non-negative ✓)
+      - Chart generates 26611-byte PNG images consistently
+      - All required JSON fields present: project_name, documents_count, total_sentences, annotated_sentences, progress, annotators_count, last_activity
+      
+      ENDPOINT FULLY FUNCTIONAL: Ready for production use with both authentication methods.
+
 
 backend:
   - task: "Authentication - User Registration"
