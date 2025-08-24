@@ -352,9 +352,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Subject filter in Manage Annotations modal"
+    - "Projects Overview analytics (stacked chart + table) - chart authentication issue"
   stuck_tasks:
     - "User/Document deletion UI refresh - delete buttons not visible"
+    - "Projects Overview analytics - chart image 403 authentication error"
   test_all: false
   test_priority: "high_first"
 
