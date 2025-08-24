@@ -745,11 +745,11 @@ const Dashboard = () => {
                       <Button onClick={() => loadDocumentSentences(doc.id)} variant="outline">Annotate</Button>
                       {user?.role === 'admin' && (
                         <>
-                          <Button variant="secondary" size="sm" onClick={() => downloadAnnotatedCsv(doc)}>
+                          <Button variant="secondary" size="sm" onClick={() => downloadAnnotatedCsvInline(doc)}>
                             <Download className="h-4 w-4 mr-1" /> Download annotated CSV
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => downloadAnnotatedCsvInline(doc)}>
-                            <Download className="h-4 w-4 mr-1" /> Download annotated CSV (inline)
+                          <Button variant="outline" size="sm" onClick={() => downloadAnnotatedCsv(doc)}>
+                            <Download className="h-4 w-4 mr-1" /> Download annotated CSV (split sentence)
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => openManageAnnotations(doc)}>Manage Annotations</Button>
                           <Button onClick={() => deleteDocument(doc.id)} variant="destructive" size="sm">
