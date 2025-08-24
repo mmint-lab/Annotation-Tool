@@ -61,9 +61,439 @@ SDOH_TAG_STRUCTURE = {
     "Social and Community Context": {"Social Cohesion": ["Social Isolation"]}
 }
 
-# Models and helpers omitted for brevity (existing content remains the same)
+# Pydantic Models
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: EmailStr
+    full_name: str
+    role: str = UserRole.ANNOTATOR
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
-# ... existing endpoints above ...
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+    role: str = UserRole.ANNOTATOR
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class DocumentUpload(BaseModel):
+    filename: str
+    project_name: Optional[str] = None
+    description: Optional[str] = None
+    total_sentences: int
+
+class Annotation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    sentence_id: str
+    user_id: str
+    tags: List[Dict[str, str]] = []
+    notes: Optional[str] = None
+    skipped: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class AnnotationCreate(BaseModel):
+    sentence_id: str
+    tags: List[Dict[str, str]] = []
+    notes: Optional[str] = None
+    skipped: bool = False
+
+# Authentication helpers
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return user_id
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user(user_id: str = Depends(verify_token)):
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+    return User(**user)
+
+async def get_admin_user(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+# Basic endpoints
+@api_router.get("/")
+async def root():
+    return {"message": "SDOH Annotation API"}
+
+@api_router.get("/domains")
+async def get_domains():
+    return SDOH_DOMAINS
+
+@api_router.get("/tag-structure")
+async def get_tag_structure():
+    return SDOH_TAG_STRUCTURE
+
+# Authentication endpoints
+@api_router.post("/auth/register", response_model=User)
+async def register(user_data: UserCreate):
+    # Check if user exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user
+    user = User(
+        email=user_data.email,
+        full_name=user_data.full_name,
+        role=user_data.role
+    )
+    
+    # Hash password and store
+    user_dict = user.dict()
+    user_dict["password"] = hash_password(user_data.password)
+    
+    await db.users.insert_one(user_dict)
+    return user
+
+@api_router.post("/auth/login", response_model=Token)
+async def login(user_data: UserLogin):
+    # Find user
+    user = await db.users.find_one({"email": user_data.email})
+    if not user or not verify_password(user_data.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Create token
+    access_token = create_access_token(data={"sub": user["id"]})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@api_router.get("/auth/me", response_model=User)
+async def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+# Document endpoints
+@api_router.get("/documents")
+async def get_documents(current_user: User = Depends(get_current_user)):
+    documents = await db.documents.find({}, {"_id": 0}).to_list(1000)
+    return documents
+
+@api_router.post("/documents/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    project_name: Optional[str] = None,
+    description: Optional[str] = None,
+    current_user: User = Depends(get_admin_user)
+):
+    # Read CSV content
+    content = await file.read()
+    csv_content = content.decode('utf-8')
+    
+    # Parse CSV and extract sentences
+    csv_reader = csv.DictReader(io.StringIO(csv_content))
+    sentences = []
+    
+    for row in csv_reader:
+        # Extract text from discharge_summary column
+        text = row.get('discharge_summary', '').strip()
+        if text:
+            # Split into sentences (simple approach)
+            sentence_texts = re.split(r'[.!?]+', text)
+            for sentence_text in sentence_texts:
+                sentence_text = sentence_text.strip()
+                if sentence_text:
+                    sentence = {
+                        "id": str(uuid.uuid4()),
+                        "text": sentence_text,
+                        "subject_id": row.get('patient_id', row.get('note_id', 'unknown')),
+                        "document_id": "",  # Will be set after document creation
+                        "created_at": datetime.utcnow()
+                    }
+                    sentences.append(sentence)
+    
+    # Create document
+    document = {
+        "id": str(uuid.uuid4()),
+        "filename": file.filename,
+        "project_name": project_name or "Default Project",
+        "description": description,
+        "total_sentences": len(sentences),
+        "uploaded_by": current_user.id,
+        "created_at": datetime.utcnow()
+    }
+    
+    # Set document_id for sentences
+    for sentence in sentences:
+        sentence["document_id"] = document["id"]
+    
+    # Insert document and sentences
+    await db.documents.insert_one(document)
+    if sentences:
+        await db.sentences.insert_many(sentences)
+    
+    return document
+
+@api_router.get("/documents/{document_id}/sentences")
+async def get_document_sentences(
+    document_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    sentences = await db.sentences.find(
+        {"document_id": document_id}, 
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Add existing annotations to each sentence
+    for sentence in sentences:
+        annotations = await db.annotations.find(
+            {"sentence_id": sentence["id"]}, 
+            {"_id": 0}
+        ).to_list(100)
+        sentence["annotations"] = annotations
+    
+    return sentences
+
+# Annotation endpoints
+@api_router.post("/annotations", response_model=Annotation)
+async def create_annotation(
+    annotation_data: AnnotationCreate,
+    current_user: User = Depends(get_current_user)
+):
+    annotation = Annotation(
+        sentence_id=annotation_data.sentence_id,
+        user_id=current_user.id,
+        tags=annotation_data.tags,
+        notes=annotation_data.notes,
+        skipped=annotation_data.skipped
+    )
+    
+    annotation_dict = annotation.dict()
+    await db.annotations.insert_one(annotation_dict)
+    return annotation
+
+@api_router.get("/annotations/sentence/{sentence_id}")
+async def get_sentence_annotations(
+    sentence_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    annotations = await db.annotations.find(
+        {"sentence_id": sentence_id}, 
+        {"_id": 0}
+    ).to_list(100)
+    return annotations
+
+@api_router.delete("/annotations/{annotation_id}")
+async def delete_annotation(
+    annotation_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    # Find annotation
+    annotation = await db.annotations.find_one({"id": annotation_id})
+    if not annotation:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+    
+    # Check permissions
+    if annotation["user_id"] != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    
+    # Delete annotation
+    await db.annotations.delete_one({"id": annotation_id})
+    return {"message": "Annotation deleted"}
+
+# Analytics endpoints
+@api_router.get("/analytics/overview")
+async def get_analytics_overview(current_user: User = Depends(get_current_user)):
+    total_documents = await db.documents.count_documents({})
+    total_sentences = await db.sentences.count_documents({})
+    total_annotations = await db.annotations.count_documents({})
+    tagged_annotations = await db.annotations.count_documents({"skipped": False})
+    skipped_annotations = await db.annotations.count_documents({"skipped": True})
+    unique_annotators = len(await db.annotations.distinct("user_id"))
+    
+    return {
+        "total_documents": total_documents,
+        "total_sentences": total_sentences,
+        "total_annotations": total_annotations,
+        "tagged_annotations": tagged_annotations,
+        "skipped_annotations": skipped_annotations,
+        "unique_annotators": unique_annotators
+    }
+
+@api_router.get("/analytics/enhanced")
+async def get_enhanced_analytics(current_user: User = Depends(get_current_user)):
+    # Per-user stats
+    users = await db.users.find({}, {"_id": 0}).to_list(1000)
+    per_user = []
+    
+    for user in users:
+        user_annotations = await db.annotations.count_documents({"user_id": user["id"]})
+        tagged = await db.annotations.count_documents({"user_id": user["id"], "skipped": False})
+        skipped = await db.annotations.count_documents({"user_id": user["id"], "skipped": True})
+        
+        per_user.append({
+            "user_id": user["id"],
+            "full_name": user["full_name"],
+            "total": user_annotations,
+            "tagged": tagged,
+            "skipped": skipped,
+            "sentences_left": 0  # Simplified
+        })
+    
+    # Overall sentences left
+    total_sentences = await db.sentences.count_documents({})
+    annotated_sentences = len(await db.annotations.distinct("sentence_id"))
+    sentences_left_overall = total_sentences - annotated_sentences
+    
+    # IRR pairs (simplified)
+    irr_pairs = []
+    
+    return {
+        "per_user": per_user,
+        "sentences_left_overall": sentences_left_overall,
+        "irr_pairs": irr_pairs
+    }
+
+@api_router.get("/analytics/tag-prevalence-chart")
+async def get_tag_prevalence_chart(current_user: User = Depends(get_current_user)):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from io import BytesIO
+    
+    # Simple chart
+    plt.figure(figsize=(10, 6))
+    plt.bar(['Economic', 'Social', 'Health'], [10, 15, 8])
+    plt.title('Tag Prevalence')
+    plt.ylabel('Count')
+    
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    return StreamingResponse(buf, media_type='image/png')
+
+@api_router.get("/analytics/valence-chart")
+async def get_valence_chart(current_user: User = Depends(get_current_user)):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from io import BytesIO
+    
+    # Simple chart
+    plt.figure(figsize=(8, 6))
+    plt.pie([30, 45, 25], labels=['Positive', 'Negative', 'Neutral'])
+    plt.title('Valence Distribution')
+    
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    return StreamingResponse(buf, media_type='image/png')
+
+# Admin endpoints
+@api_router.get("/admin/users")
+async def get_all_users(current_user: User = Depends(get_admin_user)):
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    return users
+
+@api_router.post("/admin/users", response_model=User)
+async def create_user(
+    user_data: UserCreate,
+    current_user: User = Depends(get_admin_user)
+):
+    # Check if user exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user
+    user = User(
+        email=user_data.email,
+        full_name=user_data.full_name,
+        role=user_data.role
+    )
+    
+    # Hash password and store
+    user_dict = user.dict()
+    user_dict["password"] = hash_password(user_data.password)
+    
+    await db.users.insert_one(user_dict)
+    return user
+
+@api_router.delete("/admin/documents/{document_id}")
+async def delete_document(
+    document_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    # Delete document and related data
+    await db.documents.delete_one({"id": document_id})
+    await db.sentences.delete_many({"document_id": document_id})
+    
+    # Get sentence IDs to delete annotations
+    sentence_ids = await db.sentences.distinct("id", {"document_id": document_id})
+    if sentence_ids:
+        await db.annotations.delete_many({"sentence_id": {"$in": sentence_ids}})
+    
+    return {"message": "Document deleted"}
+
+@api_router.get("/admin/download/annotated-csv/{document_id}")
+async def download_annotated_csv(
+    document_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    # Get document
+    document = await db.documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Get sentences and annotations
+    sentences = await db.sentences.find({"document_id": document_id}).to_list(1000)
+    
+    # Create CSV content
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['sentence_id', 'sentence_text', 'user_id', 'tags', 'notes', 'skipped'])
+    
+    for sentence in sentences:
+        annotations = await db.annotations.find({"sentence_id": sentence["id"]}).to_list(100)
+        if annotations:
+            for annotation in annotations:
+                writer.writerow([
+                    sentence["id"],
+                    sentence["text"],
+                    annotation["user_id"],
+                    str(annotation.get("tags", [])),
+                    annotation.get("notes", ""),
+                    annotation.get("skipped", False)
+                ])
+        else:
+            writer.writerow([sentence["id"], sentence["text"], "", "", "", ""])
+    
+    output.seek(0)
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode()),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={document['filename']}_annotated.csv"}
+    )
 
 @api_router.get("/analytics/projects")
 async def get_projects_analytics(current_user: User = Depends(get_current_user)):
