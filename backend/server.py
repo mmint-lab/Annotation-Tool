@@ -826,10 +826,20 @@ async def download_annotated_csv(document_id: str, admin_user: User = Depends(ge
 # Document Annotations
 @api_router.get("/documents/{document_id}/annotations")
 async def get_document_annotations(document_id: str, current_user: User = Depends(get_current_user)):
-    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0, "id": 1}).to_list(100000)
-    sentence_ids = [s["id"] for s in sentences]
-    annotations = await db.annotations.find({"sentence_id": {"$in": sentence_ids}}, {"_id": 0}).to_list(100000)
-    return annotations
+    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).to_list(100000)
+    by_id = {s['id']: s for s in sentences}
+    sentence_ids = list(by_id.keys())
+    if not sentence_ids:
+        return []
+    anns = await db.annotations.find({"sentence_id": {"$in": sentence_ids}}, {"_id": 0}).to_list(100000)
+    # Enrich with sentence text for filtering convenience
+    for a in anns:
+        s = by_id.get(a.get('sentence_id'))
+        if s:
+            a['sentence_text'] = s.get('text', '')
+            a['subject_id'] = s.get('subject_id')
+            a['sentence_index'] = s.get('sentence_index')
+    return anns
 
 # Bulk Operations
 @api_router.post("/admin/users/bulk-delete")
