@@ -575,12 +575,23 @@ async def get_projects_analytics(current_user: User = Depends(get_current_user))
     return result
 
 @api_router.get("/analytics/projects-chart")
-async def get_projects_chart(current_user: User = Depends(get_current_user)):
+async def get_projects_chart(current_user: User = Depends(get_current_user), token: Optional[str] = None):
     """
     Stacked bar chart (Option B): Completed vs Remaining sentences per project.
-    - Completed = annotated_sentences
-    - Remaining = total_sentences - annotated_sentences (min 0)
+    Supports token query param for environments where <img> requests cannot send Authorization headers.
     """
+    # If token query param is provided (e.g., from frontend <img src>), validate it and set current_user
+    if token and not current_user:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            if user_id:
+                u = await db.users.find_one({"id": user_id}, {"_id": 0})
+                if not u:
+                    raise HTTPException(status_code=401, detail="Invalid token user")
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
