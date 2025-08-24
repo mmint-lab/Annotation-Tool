@@ -171,4 +171,7 @@ async def get_projects_chart(current_user: User = Depends(get_current_user)):
     buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
 
+# Include API router with /api prefix for all endpoints
+app.include_router(api_router)
+
 # ... rest of server remains unchanged ...
