@@ -611,6 +611,7 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState({});
   const [enhancedAnalytics, setEnhancedAnalytics] = useState({ per_user: [], sentences_left_overall: 0, irr_pairs: [] });
   const [projects, setProjects] = useState([]);
+  const [projectsChartUrl, setProjectsChartUrl] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [sentences, setSentences] = useState([]);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
