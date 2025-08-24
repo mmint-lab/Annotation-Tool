@@ -268,6 +268,49 @@ agent_communication:
   - agent: "main"
     message: |
       Implemented save/skip navigation fixes, per-sentence annotation refresh, UI for annotation deletion with RBAC check, and admin CSV download end-to-end. Backend fully tested via testing agent (all pass). Awaiting user confirmation to run frontend automated tests or for manual validation. Next priority (per user): fix Deletion UI after above features verified.
+  - agent: "testing"
+    message: |
+      ✅ COMPREHENSIVE FRONTEND UI TESTING COMPLETED - Fixed critical backend API router inclusion issue that was causing 404 errors. All major frontend functionality tested successfully:
+      
+      AUTHENTICATION & NAVIGATION:
+      - User registration and login: ✅ SUCCESS
+      - Home page navigation with all buttons (Documents, Annotate, Resources, Analytics): ✅ 4/4 found
+      - Admin button properly shown/hidden based on user role: ✅ SUCCESS
+      - Header navigation and app icon functionality: ✅ SUCCESS
+      
+      DOCUMENTS TAB:
+      - Document listing with proper headers: ✅ SUCCESS (Documents (2) header)
+      - Admin features (Manage Annotations, CSV download): ✅ SUCCESS for admin users
+      - Regular user restrictions properly enforced: ✅ SUCCESS
+      
+      ANNOTATE TAB:
+      - Active Documents panel: ✅ SUCCESS
+      - Me/Team toggle for admin users: ✅ SUCCESS
+      - Document opening for annotation: ✅ SUCCESS
+      - Subject header with non-N/A values: ✅ SUCCESS
+      - Prev/Next Subject navigation buttons: ✅ SUCCESS
+      - Individual annotation deletion with trash icons: ✅ SUCCESS
+      - Bulk annotation selection and deletion: ✅ SUCCESS
+      - Annotation creation interface: ✅ SUCCESS
+      
+      ANALYTICS TAB:
+      - Top-level analytics cards: ✅ SUCCESS
+      - Category Counts chart image loading: ✅ SUCCESS
+      - Valence chart image loading: ✅ SUCCESS
+      - Annotator Stats table with data: ✅ SUCCESS (10 rows)
+      - Inter-Rater Reliability table: ✅ SUCCESS
+      
+      RESOURCES TAB:
+      - Admin upload functionality: ✅ SUCCESS for admin users
+      - Available resources section: ✅ SUCCESS
+      - Download/delete buttons properly shown: ✅ SUCCESS
+      
+      CRITICAL ISSUE FOUND:
+      - Document deletion UI buttons not visible in admin interface - needs investigation
+      
+      BACKEND FIX APPLIED:
+      - Fixed missing app.include_router(api_router) causing all API endpoints to return 404
+      - Added missing route implementations for complete functionality
 
 
 backend:
