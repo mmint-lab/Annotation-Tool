@@ -601,7 +601,18 @@ async def get_projects_chart(current_user: User = Depends(get_current_user)):
     buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include API router with /api prefix for all endpoints
 app.include_router(api_router)
 
-# ... rest of server remains unchanged ...
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
