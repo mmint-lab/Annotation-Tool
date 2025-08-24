@@ -374,6 +374,9 @@ agent_communication:
   - agent: "main"
     message: |
       Implemented Projects Overview stacked chart endpoint (/api/analytics/projects-chart) and wired it in Admin -> Analytics. Added Subject filter to Manage Annotations modal (client-side unique subjects from doc annotations). Updated test plan focus and requested backend+frontend retesting.
+  - agent: "main"
+    message: |
+      FRONTEND TESTING INSTRUCTIONS: Please login using the seeded admin credentials to ensure admin UI is visible: email: admin@sdoh.com, password: admin123. Do not register a new user (defaults to annotator). After login, navigate to /dashboard and confirm the Admin tab is present. Then proceed with the Projects Overview and Manage Annotations tests as outlined in test_plan.
   - agent: "testing"
     message: |
       ✅ END-TO-END UI TESTING COMPLETED - Comprehensive testing of new frontend features completed successfully:
