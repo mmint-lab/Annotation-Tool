@@ -709,6 +709,97 @@ async def get_valence_counts_csv(current_user: User = Depends(get_current_user))
     headers = {"Content-Disposition": "attachment; filename=valence_counts.csv"}
     return StreamingResponse(iter([csv_bytes]), media_type="text/csv", headers=headers)
 
+@api_router.get("/admin/download/annotated-csv-inline/{document_id}")
+async def download_annotated_csv_inline(document_id: str, admin_user: User = Depends(get_admin_user)):
+    """Inline annotated export: one row per note (subject group).
+    Columns: document_id, document_filename, project_name, description, subject_id, annotated_text, domains, tags, tag_count, annotations_json
+    """
+    document = await db.documents.find_one({"id": document_id}, {"_id": 0})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    # Fetch sentences
+    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort("sentence_index", 1).to_list(100000)
+    # Group sentences by subject_id (stringified)
+    groups: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for s in sentences:
+        sid = s.get('subject_id')
+        if sid is None or sid == "":
+            sid = str(s.get('sentence_index'))
+        groups[str(sid)].append(s)
+    # Fetch annotations for all sentences
+    sentence_ids = [s['id'] for s in sentences]
+    anns = await db.annotations.find({"sentence_id": {"$in": sentence_ids}}, {"_id": 0}).to_list(100000)
+    anns_by_sentence: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for a in anns:
+        anns_by_sentence[a['sentence_id']].append(a)
+    # Build CSV rows
+    output = io.StringIO(); writer = csv.writer(output)
+    header = [
+        "document_id", "document_filename", "project_name", "description",
+        "subject_id", "annotated_text", "domains", "tags", "tag_count", "annotations_json"
+    ]
+    writer.writerow(header)
+
+    for sid, sents in groups.items():
+        inline_parts = []
+        domains_set = set(); tags_set = set()
+        ann_json_list = []
+        for s in sents:
+            text = s.get('text', '')
+            s_anns = anns_by_sentence.get(s['id'], [])
+            if not s_anns:
+                inline_parts.append(text)
+                continue
+            # Collect non-skipped annotations
+            tag_phrases = []
+            for a in s_anns:
+                if a.get('skipped'):
+                    continue
+                parts = []
+                for t in a.get('tags', []):
+                    if isinstance(t, dict):
+                        domain = t.get('domain', '')
+                        category = t.get('category', '')
+                        tag = t.get('tag', '')
+                        valence = t.get('valence', '')
+                        parts.append(f"{domain}: {category} - {tag} ({valence})")
+                        if domain:
+                            domains_set.add(domain)
+                        if tag:
+                            tags_set.add(f"{category} - {tag}" if category else tag)
+                    else:
+                        parts.append(str(t))
+                        tags_set.add(str(t))
+                if parts:
+                    tag_phrases.append(" | ".join(parts))
+                    ann_json_list.append({
+                        "sentence_id": s['id'],
+                        "user_id": a.get('user_id'),
+                        "tags": a.get('tags', []),
+                        "notes": a.get('notes', ''),
+                        "created_at": str(a.get('created_at')),
+                    })
+            if tag_phrases:
+                inline_parts.append(f"{text} [" + "; ".join(tag_phrases) + "]")
+            else:
+                inline_parts.append(text)
+        annotated_text = " ".join(inline_parts)
+        domains = "; ".join(sorted(list(domains_set)))
+        tags = "; ".join(sorted(list(tags_set)))
+        tag_count = sum(1 for a in ann_json_list for _ in a.get('tags', []))
+        annotations_json = io.StringIO();
+        import json as _json
+        annotations_json_str = _json.dumps(ann_json_list, ensure_ascii=False)
+        writer.writerow([
+            document_id, document.get('filename'), document.get('project_name'), document.get('description'),
+            sid, annotated_text, domains, tags, tag_count, annotations_json_str
+        ])
+
+    csv_bytes = output.getvalue().encode('utf-8')
+    filename = f"annotated_inline_{document.get('filename', document_id)}.csv"
+    headers = {"Content-Disposition": f"attachment; filename=\"{filename}\""}
+    return StreamingResponse(iter([csv_bytes]), media_type="text/csv", headers=headers)
+
 @api_router.get("/analytics/tag-prevalence-chart-public")
 async def get_tag_prevalence_chart_public(token: str = Query("")):
     # Validate token
