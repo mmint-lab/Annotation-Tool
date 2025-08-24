@@ -321,6 +321,10 @@ const Dashboard = () => {
   const [docAnnotations, setDocAnnotations] = useState([]);
   const [selectedAnnIds, setSelectedAnnIds] = useState([]);
   const [selectAllAnns, setSelectAllAnns] = useState(false);
+  const [filterAnnotator, setFilterAnnotator] = useState('all');
+  const [filterType, setFilterType] = useState('all'); // all|tagged|skipped
+  const [filterText, setFilterText] = useState('');
+  const [userMap, setUserMap] = useState({});
 
   useEffect(() => {
     fetchDocuments();
