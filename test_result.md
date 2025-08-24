@@ -324,7 +324,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Projects Overview analytics (stacked chart)"
     - "Subject filter in Manage Annotations modal"
   stuck_tasks:
     - "User/Document deletion UI refresh - delete buttons not visible"
@@ -379,6 +378,30 @@ agent_communication:
       BACKEND FIX APPLIED:
       - Fixed missing app.include_router(api_router) causing all API endpoints to return 404
       - Added missing route implementations for complete functionality
+
+  - agent: "testing"
+    message: |
+      ✅ NEW ANALYTICS ENDPOINTS TESTING COMPLETED - Focused testing on new analytics endpoints and regression testing completed successfully:
+      
+      NEW ENDPOINTS VERIFIED:
+      - /api/analytics/projects: ✅ PASSED - Returns array of projects with all required fields (project_name, documents_count, total_sentences, annotated_sentences, progress, annotators_count, last_activity). Authentication properly enforced. Data integrity validated.
+      - /api/analytics/projects-chart: ✅ PASSED - Returns valid PNG image (26633 bytes) with stacked chart logic. Authentication required. Chart logic validated: remaining = total - annotated, never negative.
+      
+      REGRESSION TESTS PASSED:
+      - /api/analytics/enhanced: ✅ PASSED - Still working with proper structure (per_user, sentences_left_overall, irr_pairs)
+      - /api/analytics/tag-prevalence-chart: ✅ PASSED - Returns valid PNG (13540 bytes)
+      - /api/analytics/valence-chart: ✅ PASSED - Returns valid PNG (20132 bytes)
+      
+      DATA INTEGRITY CONFIRMED:
+      - Stacked chart calculations accurate: completed vs remaining sentences
+      - Progress calculations correct (annotated/total)
+      - No negative remaining values
+      - All authentication properly enforced
+      
+      MINOR NOTES:
+      - Authentication returns 403 instead of 401 for unauthorized requests (acceptable behavior)
+      - Test data creation and cleanup working properly
+      - All chart endpoints return proper content-type headers
 
 
 backend:
