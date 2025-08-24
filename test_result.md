@@ -221,6 +221,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ PASSED - /api/analytics/projects-chart endpoint working correctly. Returns valid PNG image (26633 bytes) with proper content-type 'image/png'. Authentication properly enforced. Stacked chart logic validated: remaining = total - annotated, never negative. Chart reflects completed vs remaining sentences accurately."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE RE-TEST PASSED - All authentication scenarios verified: 1) Unauthenticated GET returns 401 ✓, 2) Bearer token auth returns 200 image/png (26611 bytes) ✓, 3) Query param token auth (?token=...) returns 200 image/png (26611 bytes) ✓, 4) Data integrity confirmed - all projects have non-negative remaining sentences ✓. Fixed query parameter authentication implementation. /api/analytics/projects smoke check also passed with all required fields present."
   - task: "Analytics Enhanced Regression"
     implemented: true
     working: true
