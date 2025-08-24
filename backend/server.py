@@ -693,6 +693,22 @@ async def get_valence_chart(current_user: User = Depends(get_current_user)):
     buf = BytesIO(); plt.savefig(buf, format='png'); buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
 
+@api_router.get("/analytics/valence-counts-csv")
+async def get_valence_counts_csv(current_user: User = Depends(get_current_user)):
+    counts = {"positive": 0, "negative": 0}
+    annotations = await db.annotations.find({"skipped": False}, {"_id": 0}).to_list(100000)
+    for a in annotations:
+        for t in a.get('tags', []):
+            v = t.get('valence') or 'positive'
+            if v in counts:
+                counts[v] += 1
+    output = io.StringIO(); writer = csv.writer(output)
+    writer.writerow(["valence", "count"])
+    for k, v in counts.items(): writer.writerow([k, v])
+    csv_bytes = output.getvalue().encode('utf-8')
+    headers = {"Content-Disposition": "attachment; filename=valence_counts.csv"}
+    return StreamingResponse(iter([csv_bytes]), media_type="text/csv", headers=headers)
+
 @api_router.get("/analytics/tag-prevalence-chart-public")
 async def get_tag_prevalence_chart_public(token: str = Query("")):
     # Validate token
