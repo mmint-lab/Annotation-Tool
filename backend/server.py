@@ -335,49 +335,72 @@ async def upload_document(
     description: Optional[str] = None,
     current_user: User = Depends(get_admin_user)
 ):
+    # Read CSV
     content = await file.read()
-    csv_content = content.decode('utf-8')
-    csv_reader = csv.DictReader(io.StringIO(csv_content))
+    csv_content = content.decode('utf-8', errors='ignore')
+    reader = csv.DictReader(io.StringIO(csv_content))
+
+    def pick_text(row: Dict[str, Any]) -> str:
+        # Try common text columns; if none, try to join any long string fields
+        for key in ['discharge_summary','text','note','notes','summary','content','sentence']:
+            if key in row and isinstance(row[key], str) and row[key].strip():
+                return row[key].strip()
+        # fallback: join fields that look like text
+        acc = []
+        for k, v in row.items():
+            if isinstance(v, str) and len(v.strip()) > 20:
+                acc.append(v.strip())
+        return ' '.join(acc)
+
+    def pick_subject(row: Dict[str, Any], idx: int) -> str:
+        for key in ['subject_id','patient_id','note_id','encounter_id','index','id']:
+            if key in row and str(row[key]).strip():
+                return str(row[key]).strip()
+        return str(idx)
+
+    def split_sentences(text: str) -> List[str]:
+        # conservative split keeping content
+        parts = re.split(r'(?:[.!?]+\s+)', text)
+        # If re.split kept separators out, it's okay; clean empties
+        return [p.strip() for p in parts if p and p.strip()]
+
     sentences = []
-    for row in csv_reader:
-        text = row.get('discharge_summary', '').strip()
-        if text:
-            sentence_texts = re.split(r'[.!?]+', text)
-            for sentence_text in sentence_texts:
-                sentence_text = sentence_text.strip()
-                if sentence_text:
-                    sentence = {
-                        "id": str(uuid.uuid4()),
-                        "text": sentence_text,
-                        "subject_id": row.get('patient_id', row.get('note_id', 'unknown')),
-                        "document_id": "",
-                        "created_at": datetime.utcnow().isoformat()
-                    }
-                    sentences.append(sentence)
+    row_idx = 0
+    for row in reader:
+        row_idx += 1
+        text = pick_text(row)
+        if not text:
+            continue
+        chunks = split_sentences(text)
+        subj = pick_subject(row, row_idx)
+        for chunk in chunks:
+            sentences.append({
+                'id': str(uuid.uuid4()),
+                'text': chunk,
+                'subject_id': subj,
+                'document_id': '',
+                'created_at': datetime.utcnow().isoformat()
+            })
+
     document_id = str(uuid.uuid4())
     document = {
-        "id": document_id,
-        "filename": file.filename,
-        "project_name": project_name or "Default Project",
-        "description": description,
-        "total_sentences": len(sentences),
-        "uploaded_by": current_user.id,
-        "created_at": datetime.utcnow().isoformat()
+        'id': document_id,
+        'filename': file.filename,
+        'project_name': 'Default Project',  # keep single project
+        'description': description,
+        'total_sentences': len(sentences),
+        'uploaded_by': current_user.id,
+        'created_at': datetime.utcnow().isoformat()
     }
-    for sentence in sentences:
-        sentence["document_id"] = document_id
+
+    for s in sentences:
+        s['document_id'] = document_id
+
     await db.documents.insert_one(document)
     if sentences:
         await db.sentences.insert_many(sentences)
-    return {
-        "id": document["id"],
-        "filename": document["filename"],
-        "project_name": document["project_name"],
-        "description": document["description"],
-        "total_sentences": document["total_sentences"],
-        "uploaded_by": document["uploaded_by"],
-        "created_at": document["created_at"]
-    }
+
+    return {k: document[k] for k in ['id','filename','project_name','description','total_sentences','uploaded_by','created_at']}
 
 @api_router.get("/documents/{document_id}/sentences")
 async def get_document_sentences(
