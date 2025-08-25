@@ -345,10 +345,12 @@ class BulkDeleteRequest(BaseModel):
 async def get_all_users(current_user: User = Depends(get_admin_user)):
     """Get all users (admin only) - returns users without passwords"""
     users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
-    # Ensure is_active field exists (default to True if not present)
+    # Ensure required fields exist with defaults
     for user in users:
         if "is_active" not in user:
             user["is_active"] = True
+        if "role" not in user:
+            user["role"] = UserRole.ANNOTATOR  # Default role for legacy users
     return users
 
 @api_router.post("/admin/users", response_model=User)
