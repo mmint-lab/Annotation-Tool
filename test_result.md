@@ -369,13 +369,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Projects Overview analytics (stacked chart + table) - Admin tab not visible"
-    - "Subject filter in Manage Annotations modal - Admin buttons not visible"
-  stuck_tasks:
-    - "Projects Overview analytics - Admin tab missing from UI"
-    - "Subject filter in Manage Annotations modal - Admin features not showing"
-    - "User/Document deletion UI refresh - delete buttons not visible"
+  current_focus: []
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
