@@ -105,7 +105,8 @@ const AccountPage = () => {
   const saveProfile = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/auth/me/profile`, { full_name: fullName });
+      const res = await axios.put(`${API}/auth/me/profile`, { full_name: fullName });
+      if (res?.data) setUser(res.data);
       alert("Profile updated");
     } catch (e) {
       alert(e.response?.data?.detail || "Error updating profile");
