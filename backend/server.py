@@ -491,7 +491,7 @@ async def download_annotated_csv(
     return StreamingResponse(
         io.BytesIO(output.getvalue().encode()),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={document['filename']}_annotated.csv"}
+        headers={"Content-Disposition": f"inline; filename=annotated_inline_{document['filename']}.csv"}
     )
 
 @api_router.get("/analytics/projects")
