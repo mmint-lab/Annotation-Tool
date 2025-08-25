@@ -726,7 +726,8 @@ const AdminManagementPanel = () => {
     catch (e) { alert('Error updating default project: ' + (e.response?.data?.detail || e.message || 'Please try again.')); }
   };
 
-  };
+  useEffect(() => { (async () => { try { const res = await axios.get(`${API}/admin/settings/default-project`); if (res?.data?.value) setDefaultProject(res.data.value); } catch {} })(); }, []);
+
 
   return (
     <div className="space-y-6">
