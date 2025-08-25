@@ -148,6 +148,25 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
+async def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
+    """Optional authentication - returns None if no token provided"""
+    if not credentials:
+        return None
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if user is None:
+            return None
+        # Convert datetime to string if needed
+        if isinstance(user.get('created_at'), datetime):
+            user['created_at'] = user['created_at'].isoformat()
+        return User(**user)
+    except jwt.PyJWTError:
+        return None
+
 # Basic endpoints
 @api_router.get("/")
 async def root():
