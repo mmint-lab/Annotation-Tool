@@ -861,4 +861,33 @@ async def get_resource_meta(resource_id: str, current_user: User = Depends(get_c
         raise HTTPException(status_code=404, detail="Not found")
     return meta
 
+@api_router.get("/resources/{resource_id}/download")
+async def download_resource(resource_id: str, current_user: Optional[User] = Depends(get_current_user_optional), token: Optional[str] = None):
+    # Allow ?token for image/pdf previews in <img>/<iframe>
+    if token and not current_user:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            if user_id:
+                u = await db.users.find_one({"id": user_id}, {"_id": 0})
+                if not u:
+                    raise HTTPException(status_code=401, detail="Invalid token user")
+                current_user = User(**u)
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        oid = ObjectId(resource_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Not found")
+    meta = await db.resources_meta.find_one({"id": resource_id}, {"_id": 0})
+    if not meta:
+        raise HTTPException(status_code=404, detail="Not found")
+    grid_out = await fs_bucket.open_download_stream(oid)
+    data = await grid_out.read()
+    return StreamingResponse(io.BytesIO(data), media_type=meta.get('content_type') or 'application/octet-stream', headers={
+        "Content-Disposition": f"inline; filename={meta['filename']}"
+    })
+
 app.include_router(api_router)
