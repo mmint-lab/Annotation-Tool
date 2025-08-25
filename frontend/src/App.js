@@ -1088,6 +1088,7 @@ const Home = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Button variant="outline" onClick={() => navigate('/dashboard#documents')}>Documents</Button>
             <Button variant="outline" onClick={() => navigate('/dashboard#annotate')}>Annotate</Button>
+            <Button variant="outline" onClick={() => navigate('/dashboard#resources')}>Resources</Button>
             {user?.role === 'admin' && (<Button variant="outline" onClick={() => navigate('/dashboard#admin')}>Admin</Button>)}
           </div>
         </CardContent>
