@@ -1102,6 +1102,11 @@ async def download_resource(resource_id: str, current_user: Optional[User] = Dep
 
 app.include_router(api_router)
 
+@api_router.get("/admin/settings/default-project")
+async def get_default_project(current_user: User = Depends(get_admin_user)):
+    value = await get_default_project_name()
+    return {"value": value}
+
 @api_router.put("/admin/settings/default-project")
 async def set_default_project(name: str = Query(..., min_length=1, max_length=200), current_user: User = Depends(get_admin_user)):
     await db.settings.update_one({"key": "default_project_name"}, {"$set": {"key": "default_project_name", "value": name, "updated_at": datetime.utcnow().isoformat()}}, upsert=True)
