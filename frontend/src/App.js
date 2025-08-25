@@ -1015,8 +1015,31 @@ const Dashboard = () => {
             </Card>
           )}
           <Card>
-            <CardHeader><CardTitle>Available Resources</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Available Resources</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Input placeholder="Search by name" value={resourcesQuery} onChange={(e)=>setResourcesQuery(e.target.value)} className="w-48" />
+                <Select value={resourcesKind} onValueChange={setResourcesKind}>
+                  <SelectTrigger className="w-40"><SelectValue placeholder="Kind" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="file">Files</SelectItem>
+                    <SelectItem value="link">Links</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={resourcesMime} onValueChange={setResourcesMime}>
+                  <SelectTrigger className="w-40"><SelectValue placeholder="Type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="image">Images</SelectItem>
+                    <SelectItem value="pdf">PDF</SelectItem>
+                    <SelectItem value="office">Office Docs</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" onClick={() => fetchResources(1)}>Apply</Button>
+              </div>
               {resources.length === 0 ? (
                 <p className="text-sm text-gray-600">No resources uploaded yet.</p>
               ) : (
