@@ -342,6 +342,51 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   const [selectedAnnIds, setSelectedAnnIds] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
+  // Quick shortcuts: flatten first 9 tags for 1-9 keyboard mapping
+  const quickTags = React.useMemo(() => {
+    const arr = [];
+    Object.entries(tagStructure || {}).forEach(([domain, cats]) => {
+      Object.entries(cats || {}).forEach(([category, tags]) => {
+        (tags || []).forEach((tag) => arr.push({ domain, category, tag }));
+      });
+    });
+    return arr.slice(0, 9);
+  }, [tagStructure]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e) => {
+      const ae = document.activeElement;
+      const isTyping = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.getAttribute('contenteditable') === 'true');
+      if (isTyping) return;
+      if (e.key === 'Enter') {
+        if (selectedTags.length > 0) handleSaveAnnotation();
+      } else if (e.key.toLowerCase() === 's') {
+        handleSkip();
+      } else if (e.key === '[' || e.key === 'ArrowLeft') {
+        if (currentIndex > 0) { setSelectedTags([]); setNotes(""); onIndexChange(currentIndex - 1); }
+      } else if (e.key === ']' || e.key === 'ArrowRight') {
+        if (currentIndex < sentences.length - 1) { setSelectedTags([]); setNotes(""); onIndexChange(currentIndex + 1); }
+      } else if (e.key.toLowerCase() === 'c') {
+        setSelectedTags([]);
+      } else if (e.key.toLowerCase() === 'p') {
+        if (selectedTags.length) {
+          setSelectedTags(prev => prev.map((t, i) => i === prev.length - 1 ? { ...t, valence: 'positive' } : t));
+        }
+      } else if (e.key.toLowerCase() === 'n') {
+        if (selectedTags.length) {
+          setSelectedTags(prev => prev.map((t, i) => i === prev.length - 1 ? { ...t, valence: 'negative' } : t));
+        }
+      } else if (/^[1-9]$/.test(e.key)) {
+        const idx = parseInt(e.key, 10) - 1;
+        const qt = quickTags[idx];
+        if (qt) toggleTag(qt.domain, qt.category, qt.tag);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedTags, currentIndex, sentences.length, quickTags]);
+
   const currentSentence = sentences[currentIndex];
   const currentSubject = currentSentence?.subject_id || null;
 
