@@ -512,8 +512,8 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                       <h6 className="text-xs font-medium text-gray-600">{category}</h6>
                       <div className="flex flex-wrap gap-1">
                         {tags.map((tag) => (
-                          <Button key={tag} size="sm" variant={isSelectedTag(domain, category, tag) ? "default" : "outline"} onClick={() => addTag(domain, category, tag)} className="text-xs h-6 px-2">
-                            <Plus className="h-3 w-3 mr-1" /> {tag}
+                          <Button key={tag} size="sm" variant={isSelectedTag(domain, category, tag) ? "default" : "outline"} onClick={() => toggleTag(domain, category, tag)} className="text-xs h-6 px-2">
+                            {isSelectedTag(domain, category, tag) ? <X className="h-3 w-3 mr-1" /> : <Plus className="h-3 w-3 mr-1" />} {tag}
                           </Button>
                         ))}
                       </div>
