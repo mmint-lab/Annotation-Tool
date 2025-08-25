@@ -363,9 +363,9 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
         if (selectedTags.length > 0) handleSaveAnnotation();
       } else if (e.key.toLowerCase() === 's') {
         handleSkip();
-      } else if (e.key === '[' || e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowLeft') {
         if (currentIndex > 0) { setSelectedTags([]); setNotes(""); onIndexChange(currentIndex - 1); }
-      } else if (e.key === ']' || e.key === 'ArrowRight') {
+      } else if (e.key === 'ArrowRight') {
         if (currentIndex < sentences.length - 1) { setSelectedTags([]); setNotes(""); onIndexChange(currentIndex + 1); }
       } else if (e.key.toLowerCase() === 'c') {
         setSelectedTags([]);
