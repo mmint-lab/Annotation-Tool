@@ -433,6 +433,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   const handleSkip = async () => {
     await onAnnotate(currentSentence.id, [], notes, true);
     setSelectedTags([]); setNotes("");
+    showToast('Marked as skipped', 'info');
     if (currentIndex < sentences.length - 1) onIndexChange(currentIndex + 1);
     else alert("Annotation complete for this document.");
   };
