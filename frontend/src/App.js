@@ -681,7 +681,7 @@ const AdminManagementPanel = () => {
       await axios.post(`${API}/admin/users`, newUser);
       setNewUser({ email: "", password: "", full_name: "", role: "annotator" });
       setShowCreateUser(false); fetchUsers();
-    } catch (e) { alert("Error creating user: " + (e.response?.data?.detail || "Please try again.")); }
+    } catch (e) { alert("Error creating user: " + (e.response?.data?.detail || e.message || "Please try again.")); }
     finally { setLoading(false); }
   };
 
