@@ -791,6 +791,8 @@ const Dashboard = () => {
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [defaultProject, setDefaultProject] = useState('Default Project');
+  const [defaultProjectModalOpen, setDefaultProjectModalOpen] = useState(false);
+  const [defaultProjectInput, setDefaultProjectInput] = useState('Default Project');
 
   const [resources, setResources] = useState([]);
   const [resourceFile, setResourceFile] = useState(null);
