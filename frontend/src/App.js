@@ -94,7 +94,7 @@ const useAuth = () => {
 
 // Account Page
 const AccountPage = () => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [fullName, setFullName] = useState(user?.full_name || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
