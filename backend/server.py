@@ -425,6 +425,43 @@ async def create_annotation(annotation_data: AnnotationCreate, current_user: Use
         await db.annotations.insert_one(annotation.dict())
         return annotation
 
+@api_router.delete("/annotations/{annotation_id}")
+async def delete_annotation(annotation_id: str, current_user: User = Depends(get_current_user)):
+    # Allow delete if admin or owner
+    ann = await db.annotations.find_one({"id": annotation_id})
+    if not ann:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+    if current_user.role != UserRole.ADMIN and ann.get("user_id") != current_user.id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    await db.annotations.delete_one({"id": annotation_id})
+    return {"deleted": 1}
+
+class RemoveTagPayload(BaseModel):
+    domain: str
+    category: Optional[str] = None
+    tag: str
+
+@api_router.post("/annotations/{annotation_id}/remove-tag")
+async def remove_tag_from_annotation(annotation_id: str, payload: RemoveTagPayload, current_user: User = Depends(get_current_user)):
+    ann = await db.annotations.find_one({"id": annotation_id})
+    if not ann:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+    if current_user.role != UserRole.ADMIN and ann.get("user_id") != current_user.id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    tags = ann.get("tags", [])
+    def tag_matches(t):
+        if isinstance(t, dict):
+            return t.get("domain") == payload.domain and t.get("category") == payload.category and t.get("tag") == payload.tag
+        else:
+            return getattr(t, "domain", None) == payload.domain and getattr(t, "category", None) == payload.category and getattr(t, "tag", None) == payload.tag
+    new_tags = [t for t in tags if not tag_matches(t)]
+    if not new_tags and not ann.get("skipped", False):
+        await db.annotations.delete_one({"id": annotation_id})
+        return {"deleted": 1}
+    await db.annotations.update_one({"id": annotation_id}, {"$set": {"tags": new_tags}})
+    updated = await db.annotations.find_one({"id": annotation_id}, {"_id": 0})
+    return updated
+
 @api_router.get("/annotations/sentence/{sentence_id}")
 async def get_sentence_annotations(sentence_id: str, current_user: User = Depends(get_current_user)):
     annotations = await db.annotations.find({"sentence_id": sentence_id}, {"_id": 0}).to_list(100)
