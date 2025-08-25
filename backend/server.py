@@ -373,11 +373,13 @@ async def upload_document(
             continue
         chunks = split_sentences(text)
         subj = pick_subject(row, row_idx)
-        for chunk in chunks:
+        for si, chunk in enumerate(chunks):
             sentences.append({
                 'id': str(uuid.uuid4()),
                 'text': chunk,
                 'subject_id': subj,
+                'row_index': row_idx,
+                'sentence_index': si,
                 'document_id': '',
                 'created_at': datetime.utcnow().isoformat()
             })
