@@ -789,8 +789,21 @@ const Dashboard = () => {
     catch (e) { alert('Error downloading CSV: ' + (e.message || 'Please try again.')); }
   };
   const downloadAnnotatedCsvInline = async (doc) => {
-    try { const url = `${API}/admin/download/annotated-csv-inline/${doc.id}`; const token = localStorage.getItem('token'); const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } }); if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`); const blob = await res.blob(); const filename = `annotated_inline_${doc.filename || 'document'}.csv`; const a = document.createElement('a'); const u = window.URL.createObjectURL(blob); a.href = u; a.setAttribute('download', filename); document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(u); }
-    catch (e) { alert('Error downloading CSV: ' + (e.message || 'Please try again.')); }
+    try {
+      const url = `${API}/admin/download/annotated-csv-inline/${doc.id}`;
+      const token = localStorage.getItem('token');
+      // Fallback: try without header using ?token when header-based fetch is blocked on images-like routes
+      let res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 404 || res.status === 401) {
+        res = await fetch(`${url}?token=${encodeURIComponent(token || '')}`);
+      }
+      if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+      const blob = await res.blob();
+      const filename = `annotated_inline_${doc.filename || 'document'}.csv`;
+      const a = document.createElement('a'); const u = window.URL.createObjectURL(blob); a.href = u; a.setAttribute('download', filename); document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(u);
+    } catch (e) {
+      alert('Error downloading CSV: ' + (e.message || 'Please try again.'));
+    }
   };
 
   const uploadResource = async () => { if (!resourceFile) return; const form = new FormData(); form.append('file', resourceFile); try { await axios.post(`${API}/admin/resources/upload`, form, { headers: { 'Content-Type': 'multipart/form-data' } }); setResourceFile(null); fetchResources(); } catch (e) { alert('Error uploading resource: ' + (e.response?.data?.detail || 'Please try again.')); } };
