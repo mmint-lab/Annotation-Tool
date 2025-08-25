@@ -816,6 +816,44 @@ async def add_resource_link(payload: ExternalResource, current_user: User = Depe
     })
     return {'id': rid}
 
+@api_router.get("/resources")
+async def list_resources(
+    q: Optional[str] = None,
+    kind: Optional[str] = None, # 'file' or 'link'
+    mime: Optional[str] = None, # 'image', 'pdf', 'office'
+    page: int = 1,
+    page_size: int = 20,
+    current_user: User = Depends(get_current_user)
+):
+    query: Dict[str, Any] = {}
+    if q:
+        query['filename'] = {"$regex": q, "$options": "i"}
+    if kind:
+        if kind == 'file':
+            query['kind'] = {"$ne": "link"}
+        elif kind == 'link':
+            query['kind'] = 'link'
+    if mime:
+        if mime == 'image':
+            query['content_type'] = {"$regex": r"^image/"}
+        elif mime == 'pdf':
+            query['content_type'] = 'application/pdf'
+        elif mime == 'office':
+            query['content_type'] = {"$in": [
+                'application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            ]}
+    skip = max(0, (page-1) * page_size)
+    total = await db.resources_meta.count_documents(query)
+    cursor = db.resources_meta.find(query, {"_id": 0}).sort("uploaded_at", -1).skip(skip).limit(page_size)
+    items = await cursor.to_list(page_size)
+    # ensure kind for legacy entries
+    for it in items:
+        if 'kind' not in it:
+            it['kind'] = 'file'
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
+
 @api_router.get("/resources/{resource_id}")
 async def get_resource_meta(resource_id: str, current_user: User = Depends(get_current_user)):
     meta = await db.resources_meta.find_one({"id": resource_id}, {"_id": 0})
