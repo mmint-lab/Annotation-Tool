@@ -373,7 +373,7 @@ async def download_annotated_csv_inline(document_id: str, current_user: User = D
                     sentence["id"],
                     sentence.get("text", ""),
                     annotation.get("user_id", ""),
-                    str([t.dict() for t in (annotation.get("tags", []))]) if isinstance(annotation.get("tags"), list) else str(annotation.get("tags", [])),
+                    str([t if isinstance(t, dict) else getattr(t, 'dict', lambda: t)() for t in (annotation.get("tags", []))]) if isinstance(annotation.get("tags"), list) else str(annotation.get("tags", [])),
                     annotation.get("notes", ""),
                     annotation.get("skipped", False)
                 ])
