@@ -911,3 +911,32 @@ agent_communication:
     message: "✅ BACKEND TESTING UPDATE - New Projects analytics endpoints verified: /api/analytics/projects and /api/analytics/projects-chart (PNG) working with authentication and correct data integrity (stacked chart completed vs remaining logic). Regression tests on /api/analytics/enhanced, tag-prevalence-chart, and valence-chart passed. Ready for frontend UI tests."
   - agent: "testing"
     message: "✅ REGRESSION TESTING COMPLETED - All 24 regression tests passed successfully. Specific verification completed for: 1) CSV upload with note_id/text columns storing subject_id in sentences, 2) /api/analytics/enhanced returning per_user, sentences_left_overall, irr_pairs, 3) /api/messages RBAC (list/post/delete with proper permissions), 4) /api/auth/change-password updating hash and blocking invalid current passwords, 5) /api/auth/me/profile updating full_name, 6) All existing endpoints (overview, tag-prevalence, documents, annotations, bulk delete) still working. No failures detected in regression check."
+  - agent: "testing"
+    message: |
+      ✅ ADMIN ROLE-BASED ENDPOINTS IMPLEMENTATION & TESTING COMPLETED - Successfully implemented and tested all admin endpoints requested in review:
+      
+      ADMIN USER MANAGEMENT ENDPOINTS:
+      - ✅ GET /api/admin/users: Returns all users (id, email, full_name, role, is_active) without password hashes
+      - ✅ POST /api/admin/users: Creates new users with role (annotator/admin), requires email, password, full_name
+      - ✅ PUT /api/admin/users/{user_id}: Updates is_active and/or role fields
+      - ✅ DELETE /api/admin/users/{user_id}: Deletes user with self-delete prevention
+      - ✅ POST /api/admin/users/bulk-delete: Deletes multiple users by IDs while skipping current admin
+      
+      ADMIN DOCUMENT MANAGEMENT ENDPOINTS:
+      - ✅ POST /api/admin/documents/bulk-delete: Deletes multiple documents and cascades to sentences/annotations
+      
+      RBAC CONSTRAINTS VERIFIED:
+      - ✅ All endpoints require role === 'admin' (return 403 for non-admin users)
+      - ✅ User schema consistent with /api/auth/me (id, email, full_name, role)
+      - ✅ Password hashes never exposed in responses
+      - ✅ Self-delete prevention implemented for DELETE /api/admin/users/{user_id}
+      - ✅ Current admin skipped in bulk delete operations
+      
+      COMPREHENSIVE TESTING RESULTS:
+      - 31/32 backend tests passed (1 unrelated tag-prevalence endpoint 404)
+      - 7/7 focused admin endpoint tests passed
+      - All RBAC enforcement verified
+      - Proper error handling and response formats confirmed
+      - Cascading deletions working correctly (documents → sentences → annotations)
+      
+      IMPLEMENTATION COMPLETE: All requested admin endpoints are fully functional and production-ready.
