@@ -407,23 +407,7 @@ async def get_tag_prevalence_chart(current_user: User = Depends(get_current_user
     buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
 
-@api_router.get("/analytics/valence-chart")
-async def get_valence_chart(current_user: User = Depends(get_current_user)):
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    from io import BytesIO
-    
-    # Simple chart
-    plt.figure(figsize=(8, 6))
-    plt.pie([30, 45, 25], labels=['Positive', 'Negative', 'Neutral'])
-    plt.title('Valence Distribution')
-    
-    buf = BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    return StreamingResponse(buf, media_type='image/png')
-
+# Deprecated: valence chart removed per request
 # Admin endpoints
 @api_router.get("/admin/users")
 async def get_all_users(current_user: User = Depends(get_admin_user)):
