@@ -32,6 +32,17 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      // Global 401 handler
+      axios.interceptors.response.use(
+        (res) => res,
+        (err) => {
+          if (err?.response?.status === 401) {
+            alert('Session expired. Please sign in again.');
+            logout();
+          }
+          return Promise.reject(err);
+        }
+      );
       fetchUser();
     } else {
       setLoading(false);
