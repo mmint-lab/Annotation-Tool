@@ -61,8 +61,91 @@ SDOH_DOMAINS = [
 
 # Structured tag definitions (placeholder)
 SDOH_TAG_STRUCTURE = {
-    "Economic Stability": {"Employment": ["Employed", "Unemployed"]},
-    "Social and Community Context": {"Social Cohesion": ["Social Isolation"]}
+    "Economic Stability": {
+        "Employment": [
+            "Employed", "Under-employed", "Unemployed", "Disabled",
+            "Retired", "Homemaker", "Student", "Harmful Workplace"
+        ],
+        "Food Insecurity": [
+            "Low Food Security", "Very Low Food Security",
+            "Physical Access Barrier", "Food Assistance Program"
+        ],
+        "Housing Instability": [
+            "Cost-Burdened Household", "Overcrowding", "Multiple Moves",
+            "Eviction or Foreclosure", "Substandard Housing", "Unhoused",
+            "Housing Assistance Program"
+        ],
+        "Poverty": [
+            "Below Poverty Threshold", "Low Socioeconomic Status",
+            "Social Assistance Program"
+        ]
+    },
+    "Education Access and Quality": {
+        "Early Childhood Development and Education": [
+            "Early Learning Programs", "School Readiness Concern", "Developmental Delay",
+            "Reading Impairment", "Math Impairment", "Other Learning Disability",
+            "Early Intervention Services", "Learning Environment Concern"
+        ],
+        "Highest Level of Education": [
+            "Some High School", "High School Diploma or GED",
+            "Some College or Associate Degree", "Bachelor's Degree",
+            "Graduate or Professional Degree"
+        ],
+        "Language and Literacy": [
+            "Language Barrier", "Low Health Literacy"
+        ]
+    },
+    "Health Care Access and Quality": {
+        "Access to Health Services": [
+            "No Local Services Available", "Barrier to Specialist Care",
+            "Insurance Coverage Limitations", "Financial Barriers to Medical Care"
+        ],
+        "Access to Primary Care": [
+            "No Primary Care Provider", "Extended Gaps in Care",
+            "Geographic Barriers to Care", "Limited Appointment Availability"
+        ],
+        "Health Literacy": [
+            "Difficulty Understanding Medical Information",
+            "Limited Understanding of Preventative Care",
+            "Language Barriers Affecting Comprehension",
+            "Digital Health Literacy Gaps"
+        ]
+    },
+    "Neighborhood and Built Environment": {
+        "Access to Healthy Foods": [
+            "Distance to Food Sources", "Limited Healthy Food Options",
+            "Food Environment Quality"
+        ],
+        "Crime and Violence": [
+            "Perceived Neighborhood Safety", "Reported Criminal Activity",
+            "Gang or Drug-Related Activity"
+        ],
+        "Environmental Conditions": [
+            "Air Quality Concerns", "Water Quality Issues",
+            "Proximity to Environmental Hazards"
+        ],
+        "Quality of Housing": [
+            "Structural Deficiencies", "Pest Infestation or Mold",
+            "Overcrowding or Unsafe Occupancy"
+        ]
+    },
+    "Social and Community Context": {
+        "Civic Participation": [
+            "Voting and Political Engagement", "Community or Religious Involvement",
+            "Volunteering or Service Activities"
+        ],
+        "Incarceration": [
+            "Current Incarceration", "History of Incarceration",
+            "Community Supervision"
+        ],
+        "Social Cohesion": [
+            "Supportive Relationships", "Social Isolation",
+            "Trust and Belonging in Community"
+        ],
+        "Experiences of Discrimination or Exclusion": [
+            "Race", "Ethnicity", "Gender", "Sexual Orientation", "Other Identity"
+        ]
+    }
 }
 
 # ========================
