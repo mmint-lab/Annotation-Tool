@@ -1053,9 +1053,7 @@ const Dashboard = () => {
         <TabsContent value="documents" className="space-y-4" id="documents">
           <div className="flex items-center justify-between">
             <CardTitle>Documents ({documents.length})</CardTitle>
-            {user?.role === 'admin' && (
-              <Button variant="outline" size="sm" onClick={saveDefaultProject}>Set Default Project ({defaultProject})</Button>
-            )}
+
             {user?.role === 'admin' && (
               <div className="flex items-center gap-2 p-2 bg-gray-50 border rounded">
                 <div className="flex items-center gap-2 mr-2">
