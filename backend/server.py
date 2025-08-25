@@ -747,17 +747,17 @@ async def download_annotated_csv_split(document_id: str, current_user: User = De
     document = await db.documents.find_one({"id": document_id})
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
-    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).to_list(10000)
+    sentences = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort([("row_index",1),("sentence_index",1)]).to_list(10000)
     sentence_map = {s["id"]: s for s in sentences}
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["document_id","sentence_id","subject_id","sentence_text","is_skipped","tag_domain","tag_category","tag","valence","notes","user_id"]) 
+    writer.writerow(["document_id","sentence_id","subject_id","row_index","sentence_index","sentence_text","is_skipped","tag_domain","tag_category","tag","valence","notes","user_id"]) 
     cursor = db.annotations.find({"sentence_id": {"$in": list(sentence_map.keys())}}, {"_id": 0})
     anns = await cursor.to_list(100000)
     for a in anns:
         s = sentence_map.get(a["sentence_id"], {})
         if a.get("skipped"):
-            writer.writerow([document_id, a.get("sentence_id"), s.get("subject_id",""), s.get("text",""), True, "","","","", a.get("notes",""), a.get("user_id","")])
+            writer.writerow([document_id, a.get("sentence_id"), s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), True, "","","","", a.get("notes",""), a.get("user_id","")])
         else:
             tags = a.get("tags", [])
             if isinstance(tags, list) and tags:
@@ -767,11 +767,68 @@ async def download_annotated_csv_split(document_id: str, current_user: User = De
                     category = t.get("category") if isinstance(t, dict) else getattr(t, "category", "")
                     tag = t.get("tag") if isinstance(t, dict) else getattr(t, "tag", "")
                     valence = t.get("valence") if isinstance(t, dict) else getattr(t, "valence", "")
-                    writer.writerow([document_id, a.get("sentence_id"), s.get("subject_id",""), s.get("text",""), False, domain, category, tag, valence, a.get("notes",""), a.get("user_id","")])
+                    writer.writerow([document_id, a.get("sentence_id"), s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), False, domain, category, tag, valence, a.get("notes",""), a.get("user_id","")])
             else:
-                writer.writerow([document_id, a.get("sentence_id"), s.get("subject_id",""), s.get("text",""), False, "","","","", a.get("notes",""), a.get("user_id","")])
+                writer.writerow([document_id, a.get("sentence_id"), s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), False, "","","","", a.get("notes",""), a.get("user_id","")])
     output.seek(0)
     return StreamingResponse(io.BytesIO(output.getvalue().encode()), media_type="text/csv", headers={"Content-Disposition": f"attachment; filename=annotated_split_{document['filename']}.csv"})
+
+@api_router.get("/admin/download/annotated-paragraphs/{document_id}")
+async def download_annotated_paragraphs(document_id: str, current_user: User = Depends(get_admin_user)):
+    doc = await db.documents.find_one({"id": document_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    # Fetch sentences ordered by original row/sentence order
+    sents = await db.sentences.find({"document_id": document_id}, {"_id": 0}).sort([("row_index",1),("sentence_index",1)]).to_list(100000)
+    if not sents:
+        raise HTTPException(status_code=404, detail="No sentences for document")
+    ids = [s['id'] for s in sents]
+    # Prefetch all annotations for these sentences
+    anns = await db.annotations.find({"sentence_id": {"$in": ids}}, {"_id": 0}).to_list(200000)
+    by_sid: Dict[str, List[Dict[str, Any]]] = {}
+    for a in anns:
+        by_sid.setdefault(a['sentence_id'], []).append(a)
+    # Helper: format tags for a sentence
+    def format_sentence_tags(sent_id: str) -> str:
+        arr = []
+        for a in by_sid.get(sent_id, []):
+            if a.get('skipped'):
+                # indicate skipped by someone
+                arr.append('Skipped')
+            tags = a.get('tags', [])
+            if isinstance(tags, list):
+                for t in tags:
+                    if isinstance(t, dict):
+                        domain = t.get('domain') or ''
+                        category = t.get('category') or ''
+                        tag = t.get('tag') or ''
+                        val = t.get('valence') or ''
+                    else:
+                        domain = getattr(t, 'domain', '')
+                        category = getattr(t, 'category', '')
+                        tag = getattr(t, 'tag', '')
+                        val = getattr(t, 'valence', '')
+                    sign = '+' if (val or '').lower() == 'positive' else '-'
+                    arr.append(f"{domain}:{category}:{tag}({sign})")
+        if not arr:
+            return ''
+        return f" [Tags: {', '.join(arr)}]"
+    # Group sentences back to paragraphs per row_index
+    para_map: Dict[int, Dict[str, Any]] = {}
+    for s in sents:
+        ri = int(s.get('row_index') or 0)
+        if ri not in para_map:
+            para_map[ri] = {'subject_id': s.get('subject_id', ''), 'parts': []}
+        para_map[ri]['parts'].append(s.get('text','') + format_sentence_tags(s['id']))
+    # Build CSV
+    out = io.StringIO(); w = csv.writer(out)
+    w.writerow(["row_index","subject_id","annotated_paragraph_text"]) 
+    for ri in sorted(para_map.keys()):
+        subj = para_map[ri]['subject_id']
+        paragraph = ' '.join(para_map[ri]['parts']).strip()
+        w.writerow([ri, subj, paragraph])
+    out.seek(0)
+    return StreamingResponse(io.BytesIO(out.getvalue().encode()), media_type='text/csv', headers={"Content-Disposition": f"attachment; filename=annotated_paragraphs_{doc['filename']}"})
 
 # ========================
 # Analytics (partial)
