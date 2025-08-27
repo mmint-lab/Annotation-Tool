@@ -1056,7 +1056,10 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <CardTitle>Documents ({documents.length})</CardTitle>
             {user?.role === 'admin' && (
-              <Button variant="outline" size="sm" onClick={() => setDefaultProjectModalOpen(true)}>Set Default Project</Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setDefaultProjectModalOpen(true)}>Set Default Project</Button>
+                <Button variant="outline" size="sm" onClick={async () => { if (!window.confirm('Reassign all existing documents to the current default project?')) return; try { const res = await axios.post(`${API}/admin/documents/reassign-to-default`); alert(`All documents reassigned to: ${res.data?.project_name || 'Default Project'}`); fetchDocuments(); } catch (e) { alert('Error reassigning documents: ' + (e.response?.data?.detail || e.message || 'Please try again.')); } }}>Reassign all to default</Button>
+              </div>
             )}
 
             {user?.role === 'admin' && (
