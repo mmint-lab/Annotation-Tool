@@ -712,7 +712,7 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
       setUsers(users.filter(u => u.id !== userId)); setRefreshKey(Date.now()); setDeletingUserId(userId);
       await axios.delete(`${API}/admin/users/${userId}`);
     } catch (e) {
-      alert("User removed from list (API call failed but UI updated)");
+      showToast('User removed from list (API call failed but UI updated)', 'info');
     } finally { setDeletingUserId(null); }
   };
 
