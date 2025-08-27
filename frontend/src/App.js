@@ -37,7 +37,7 @@ const AuthProvider = ({ children }) => {
         (res) => res,
         (err) => {
           if (err?.response?.status === 401) {
-            alert('Session expired. Please sign in again.');
+            showToast('Session expired. Please sign in again.', 'error');
             logout();
           }
           return Promise.reject(err);
