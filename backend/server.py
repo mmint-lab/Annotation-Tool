@@ -1177,3 +1177,9 @@ async def get_default_project(current_user: User = Depends(get_admin_user)):
 async def set_default_project(name: str = Query(..., min_length=1, max_length=200), current_user: User = Depends(get_admin_user)):
     await db.settings.update_one({"key": "default_project_name"}, {"$set": {"key": "default_project_name", "value": name, "updated_at": datetime.utcnow().isoformat()}}, upsert=True)
     return {"value": name}
+
+@api_router.post("/admin/documents/reassign-to-default")
+async def reassign_documents_to_default(current_user: User = Depends(get_admin_user)):
+    default_name = await get_default_project_name()
+    await db.documents.update_many({}, {"$set": {"project_name": default_name}})
+    return {"updated": True, "project_name": default_name}
