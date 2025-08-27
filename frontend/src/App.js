@@ -903,7 +903,7 @@ const Dashboard = () => {
 
   const createAnnotation = async (sentenceId, tags, notes, skipped = false) => {
     try { await axios.post(`${API}/annotations`, { sentence_id: sentenceId, tags, notes, skipped }); await refreshSentenceAnnotations(sentenceId); fetchAnalytics(); }
-    catch (e) { alert('Error saving annotation: ' + (e.response?.data?.detail || 'Please try again.')); }
+    catch (e) { showToast('Error saving annotation: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
   };
 
   const deleteDocument = async (documentId) => {
