@@ -908,7 +908,7 @@ const Dashboard = () => {
 
   const deleteDocument = async (documentId) => {
     if (!window.confirm('Delete this document and all associated annotations?')) return;
-    try { setDocuments(documents.filter(d => d.id !== documentId)); await axios.delete(`${API}/admin/documents/${documentId}`); fetchAnalytics(); }
+    try { setDocuments(documents.filter(d => d.id !== documentId)); await axios.delete(`${API}/admin/documents/${documentId}`); fetchAnalytics(); showToast('Document deleted', 'success'); }
     catch (e) { showToast('Document removed from list (API call failed but UI updated)', 'info'); }
   };
 
