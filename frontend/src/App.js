@@ -1056,7 +1056,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <CardTitle>Documents ({documents.length})</CardTitle>
             {user?.role === 'admin' && (
-              <Button variant="outline" size="sm" onClick={() => setDefaultProjectModalOpen(true)}>Set Default Project ({defaultProject})</Button>
+              <Button variant="outline" size="sm" onClick={() => setDefaultProjectModalOpen(true)}>Set Default Project</Button>
             )}
 
             {user?.role === 'admin' && (
