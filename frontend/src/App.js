@@ -673,6 +673,11 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
   const [newUser, setNewUser] = useState({ email: "", password: "", full_name: "", role: "annotator" });
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectAllUsers, setSelectAllUsers] = useState(false);
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 1600);
+  };
 
   const fetchUsers = async () => {
     try {
