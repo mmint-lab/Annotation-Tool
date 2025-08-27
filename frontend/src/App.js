@@ -923,7 +923,7 @@ const Dashboard = () => {
       if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
       const blob = await res.blob(); const filename = `annotated_${doc.filename || 'document'}.csv`;
       const a = document.createElement('a'); const u = window.URL.createObjectURL(blob); a.href = u; a.setAttribute('download', filename); document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(u);
-    } catch (e) { alert('Error downloading CSV: ' + (e.message || 'Please try again.')); }
+    } catch (e) { showToast('Error downloading CSV: ' + (e.message || 'Please try again.'), 'error'); }
   };
   const downloadAnnotatedCsvInline = async (doc) => {
     try {
