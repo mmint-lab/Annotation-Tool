@@ -706,7 +706,7 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
   };
 
   const deleteUser = async (userId, userName) => {
-    if (userId === currentUser?.id) { alert("You cannot delete your own account!"); return; }
+    if (userId === currentUser?.id) { showToast('You cannot delete your own account!', 'error'); return; }
     if (!window.confirm(`Delete user "${userName}"?`)) return;
     try {
       setUsers(users.filter(u => u.id !== userId)); setRefreshKey(Date.now()); setDeletingUserId(userId);
