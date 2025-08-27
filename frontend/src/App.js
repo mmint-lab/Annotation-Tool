@@ -685,7 +685,7 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
       const res = await axios.get(`${API}/admin/users`);
       setUsers([...res.data]); setSelectedUserIds([]); setSelectAllUsers(false); setRefreshKey(Date.now());
     } catch (e) {
-      alert("Error fetching users: " + (e.response?.data?.detail || "Please try again."));
+      showToast('Error fetching users: ' + (e.response?.data?.detail || 'Please try again.'), 'error');
     } finally { setLoading(false); }
   };
 
