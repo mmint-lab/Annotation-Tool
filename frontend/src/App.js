@@ -867,7 +867,7 @@ const Dashboard = () => {
       setResourcesPage(res.data?.page || page);
     } catch {}
   };
-  const addResourceLink = async (title, url) => { try { await axios.post(`${API}/admin/resources/link`, { title, url }); await fetchResources(); } catch (e) { alert('Error adding link: ' + (e.response?.data?.detail || 'Please try again.')); } };
+  const addResourceLink = async (title, url) => { try { await axios.post(`${API}/admin/resources/link`, { title, url }); await fetchResources(); showToast('Link added', 'success'); } catch (e) { showToast('Error adding link: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); } };
 
   const annotateDoc = async (documentId, options = {}) => {
     try {
