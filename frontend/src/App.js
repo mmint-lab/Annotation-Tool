@@ -879,7 +879,7 @@ const Dashboard = () => {
       setCurrentSentenceIndex(nextIndex);
       setActiveTab('annotate');
       window.location.hash = 'annotate';
-    } catch (e) { alert('Error loading sentences: ' + (e.response?.data?.detail || 'Please try again.')); }
+    } catch (e) { showToast('Error loading sentences: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
   };
 
   const loadDocumentSentences = annotateDoc; // backward compatibility
