@@ -799,23 +799,25 @@ async def download_annotated_paragraphs(document_id: str, current_user: User = D
     def format_sentence_tags(sent_id: str) -> str:
         arr = []
         for a in by_sid.get(sent_id, []):
+            # Skip 'skipped' annotations for paragraph export; do not include any marker
             if a.get('skipped'):
-                # indicate skipped by someone
-                arr.append('Skipped')
+                continue
             tags = a.get('tags', [])
             if isinstance(tags, list):
                 for t in tags:
                     if isinstance(t, dict):
-                        domain = t.get('domain') or ''
-                        category = t.get('category') or ''
-                        tag = t.get('tag') or ''
-                        val = t.get('valence') or ''
+                        domain = (t.get('domain') or '').strip()
+                        category = (t.get('category') or '').strip()
+                        tag = (t.get('tag') or '').strip()
+                        val = (t.get('valence') or '').strip().lower()
                     else:
-                        domain = getattr(t, 'domain', '')
-                        category = getattr(t, 'category', '')
-                        tag = getattr(t, 'tag', '')
-                        val = getattr(t, 'valence', '')
-                    sign = '+' if (val or '').lower() == 'positive' else '-'
+                        domain = (getattr(t, 'domain', '') or '').strip()
+                        category = (getattr(t, 'category', '') or '').strip()
+                        tag = (getattr(t, 'tag', '') or '').strip()
+                        val = (getattr(t, 'valence', '') or '').strip().lower()
+                    if not domain and not category and not tag:
+                        continue
+                    sign = '+' if val == 'positive' else '-'
                     arr.append(f"{domain}:{category}:{tag}({sign})")
         if not arr:
             return ''
