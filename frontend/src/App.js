@@ -355,7 +355,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   const [toast, setToast] = useState(null);
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 1500);
+    setTimeout(() => setToast(null), 1600);
   };
 
   // Quick shortcuts: flatten first 9 tags for 1-9 keyboard mapping
