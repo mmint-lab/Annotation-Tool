@@ -482,7 +482,61 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Annotating: {currentDocName || ""}</CardTitle>
-            <Badge variant="secondary">{currentIndex + 1} of {sentences.length}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{currentIndex + 1} of {sentences.length}</Badge>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const url = `${API}/download/my-annotations-csv/${documentId}`;
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+                    const blob = await res.blob();
+                    const a = document.createElement('a');
+                    const u = window.URL.createObjectURL(blob);
+                    a.href = u;
+                    a.setAttribute('download', `my_annotations_${currentDocName || 'export'}.csv`);
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(u);
+                    showToast('My annotations CSV downloaded', 'success');
+                  } catch (e) {
+                    showToast('Error downloading CSV: ' + (e.message || 'Please try again.'), 'error');
+                  }
+                }}
+              >
+                <Download className="h-4 w-4 mr-1" /> My CSV
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const url = `${API}/download/my-annotated-paragraphs/${documentId}`;
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+                    const blob = await res.blob();
+                    const a = document.createElement('a');
+                    const u = window.URL.createObjectURL(blob);
+                    a.href = u;
+                    a.setAttribute('download', `my_paragraphs_${currentDocName || 'export'}.csv`);
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(u);
+                    showToast('My paragraphs CSV downloaded', 'success');
+                  } catch (e) {
+                    showToast('Error downloading paragraphs: ' + (e.message || 'Please try again.'), 'error');
+                  }
+                }}
+              >
+                <Download className="h-4 w-4 mr-1" /> My Paragraphs
+              </Button>
+            </div>
           </div>
           <div className="flex items-center justify-between text-sm text-gray-600">
             <span>Subject: {currentSubject || "N/A"}</span>
