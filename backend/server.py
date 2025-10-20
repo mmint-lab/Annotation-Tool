@@ -521,6 +521,59 @@ async def bulk_delete_annotations(payload: Dict[str, List[str]], current_user: U
         await db.annotations.delete_many({"id": {"$in": ids}})
     return {"deleted": len(ids)}
 
+
+@api_router.get("/annotations/active-docs")
+async def get_active_docs(scope: str = Query("me"), current_user: User = Depends(get_current_user)):
+    """Get documents with annotation progress for the active documents panel"""
+    # Get all documents
+    docs = await db.documents.find({}, {"_id": 0}).to_list(10000)
+    result = []
+    
+    for doc in docs:
+        # Get total sentences for this document
+        total_sentences = await db.sentences.count_documents({"document_id": doc["id"]})
+        if total_sentences == 0:
+            continue
+        
+        # Get sentence IDs for this document
+        sentence_ids = await db.sentences.distinct("id", {"document_id": doc["id"]})
+        
+        # Filter annotations by scope
+        ann_filter = {"sentence_id": {"$in": sentence_ids}}
+        if scope == "me":
+            ann_filter["user_id"] = current_user.id
+        
+        # Count annotated sentences
+        annotated_sentence_ids = await db.annotations.distinct("sentence_id", ann_filter)
+        annotated_count = len(annotated_sentence_ids)
+        
+        # Calculate progress
+        progress = annotated_count / total_sentences if total_sentences > 0 else 0
+        
+        # Get last annotation index for resume functionality
+        last_annotation = await db.annotations.find(ann_filter, {"_id": 0}).sort("created_at", -1).limit(1).to_list(1)
+        last_annotation_index = None
+        if last_annotation:
+            last_sentence = await db.sentences.find_one({"id": last_annotation[0]["sentence_id"]}, {"_id": 0})
+            if last_sentence:
+                last_annotation_index = last_sentence.get("index", 0)
+        
+        # Only include documents with at least one annotation or if admin viewing team
+        if annotated_count > 0 or (scope == "team" and current_user.role == UserRole.ADMIN):
+            result.append({
+                "document_id": doc["id"],
+                "filename": doc.get("filename", ""),
+                "total_sentences": total_sentences,
+                "annotated_count": annotated_count,
+                "progress": progress,
+                "last_annotation_index": last_annotation_index
+            })
+    
+    # Sort by most recently annotated
+    result.sort(key=lambda x: x.get("last_annotation_index") or 0, reverse=True)
+    return result
+
+
 # ========================
 # Admin endpoints
 # ========================
