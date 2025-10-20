@@ -722,7 +722,8 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
     if (!selectedUserIds.length) return;
     const cleaned = selectedUserIds.filter(id => id !== currentUser?.id);
     const skipped = selectedUserIds.length - cleaned.length;
-    if (!window.confirm(`Delete ${cleaned.length} users?${skipped > 0 ? ` (Skipped ${skipped} self)` : ''}`)) return;
+    const ok = await confirmAction(`Delete ${cleaned.length} users?${skipped > 0 ? ` (Skipped ${skipped} self)` : ''}`);
+    if (!ok) return;
     try { await axios.post(`${API}/admin/users/bulk-delete`, { ids: cleaned }); setUsers(prev => prev.filter(u => !cleaned.includes(u.id))); setSelectedUserIds([]); setSelectAllUsers(false); }
     catch (e) { const msg = e.response?.data?.detail || e.message || JSON.stringify(e.response?.data || {}); showToast('Error bulk-deleting users: ' + msg, 'error'); }
   };
