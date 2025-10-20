@@ -442,9 +442,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Per-User CSV Export Endpoint"
-    - "Per-User Paragraph Export Endpoint"
-    - "Admin CSV Export with Confidence and Duration"
     - "Annotator Download Buttons in Annotation Interface"
     - "Admin Download for Selected Annotator in Manage Annotations Modal"
   stuck_tasks: []
