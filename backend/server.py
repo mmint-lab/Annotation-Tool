@@ -811,15 +811,20 @@ async def download_annotated_paragraphs(document_id: str, current_user: User = D
     # Prefetch all annotations for these sentences
     anns = await db.annotations.find({"sentence_id": {"$in": ids}}, {"_id": 0}).to_list(200000)
     by_sid: Dict[str, List[Dict[str, Any]]] = {}
+    ann_user_ids = set()
     for a in anns:
         by_sid.setdefault(a['sentence_id'], []).append(a)
-    # Helper: format tags for a sentence
+        if a.get('user_id'): ann_user_ids.add(a['user_id'])
+    # Build user display map (full_name or email)
+    users = await db.users.find({"id": {"$in": list(ann_user_ids)}}, {"_id": 0}).to_list(1000)
+    user_display = {u['id']: (u.get('full_name') or u.get('email') or u['id']) for u in users}
+    # Helper: format tags for a sentence, include user display, exclude skipped
     def format_sentence_tags(sent_id: str) -> str:
         arr = []
         for a in by_sid.get(sent_id, []):
-            # Skip 'skipped' annotations for paragraph export; do not include any marker
             if a.get('skipped'):
                 continue
+            who = user_display.get(a.get('user_id',''), a.get('user_id',''))
             tags = a.get('tags', [])
             if isinstance(tags, list):
                 for t in tags:
@@ -836,7 +841,7 @@ async def download_annotated_paragraphs(document_id: str, current_user: User = D
                     if not domain and not category and not tag:
                         continue
                     sign = '+' if val == 'positive' else '-'
-                    arr.append(f"{domain}:{category}:{tag}({sign})")
+                    arr.append(f"{domain}:{category}:{tag}({sign})@{who}")
         if not arr:
             return ''
         return f" [Tags: {', '.join(arr)}]"
