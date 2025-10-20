@@ -889,7 +889,8 @@ const Dashboard = () => {
   };
 
   const deleteAnnotation = async (annotationId, sentenceId) => {
-    if (!window.confirm('Are you sure you want to delete this annotation?')) return;
+    const ok = await confirmAction('Are you sure you want to delete this annotation?');
+    if (!ok) return;
     let prev; setSentences((p) => { prev = p; return p.map((s) => s.id !== sentenceId ? s : { ...s, annotations: (s.annotations || []).filter(a => a.id !== annotationId) }); });
     try { await axios.delete(`${API}/annotations/${annotationId}`); if (sentenceId) await refreshSentenceAnnotations(sentenceId); fetchAnalytics(); }
     catch (e) { if (prev) setSentences(prev); showToast('Error deleting annotation: ' + (e.response?.data?.detail || 'Not Found'), 'error'); }
