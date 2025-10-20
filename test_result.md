@@ -428,11 +428,16 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 5
+  test_sequence: 6
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Per-User CSV Export Endpoint"
+    - "Per-User Paragraph Export Endpoint"
+    - "Admin CSV Export with Confidence and Duration"
+    - "Annotator Download Buttons in Annotation Interface"
+    - "Admin Download for Selected Annotator in Manage Annotations Modal"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
