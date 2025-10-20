@@ -106,7 +106,7 @@ user_problem_statement: "Social Determinants of Health Annotation Tool - Backend
 
 ---
 user_problem_statement: |
-  Web app to upload CSV discharge summaries, split to sentences, multi-user annotation with SDOH structured tags + valence, skip flow, analytics, admin user/doc management, and admin CSV export. Persistent issue: deletion UI not reflecting state. Current priority per user: finish other tasks first (annotation save/skip navigation, annotation deletion, admin CSV download), then fix deletion UI lists.
+  Web app to upload CSV discharge summaries, split to sentences, multi-user annotation with SDOH structured tags + valence, skip flow, analytics, admin user/doc management, and admin CSV export. Latest addition: Per-user annotation exports (my-annotations-csv and my-annotated-paragraphs endpoints), confidence and duration_ms columns in all CSV exports, and UI buttons for annotators to download their own work.
 
 backend:
   - task: "Authentication (register, login, me)"
