@@ -249,39 +249,48 @@ backend:
 
   - task: "Per-User CSV Export Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added /api/download/my-annotations-csv/{document_id} endpoint for annotators to download their own annotations in inline CSV format with confidence and duration_ms columns"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/download/my-annotations-csv/{document_id} endpoint working correctly. Authentication properly enforced (403 for unauthenticated requests). CSV export includes all required columns: document_id, sentence_id, subject_id, row_index, sentence_index, sentence_text, tag_domain, tag_category, tag, valence, notes, is_skipped, confidence, duration_ms. Only current user's annotations included in export. Proper Content-Disposition headers for file downloads. Confidence and duration_ms values properly populated from annotation data."
 
   - task: "Per-User Paragraph Export Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added /api/download/my-annotated-paragraphs/{document_id} endpoint for annotators to download their own annotations reconstructed as paragraphs"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/download/my-annotated-paragraphs/{document_id} endpoint working correctly. Authentication properly enforced (403 for unauthenticated requests). CSV format includes required columns: row_index, subject_id, annotated_paragraph_text. Inline tags properly formatted as 'Domain:Category:Tag(+/-)@UserName' within paragraph text. Skipped annotations excluded from paragraph reconstruction. Only current user's annotations included in export."
 
   - task: "Admin CSV Export with Confidence and Duration"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated /api/admin/download/annotated-csv-inline/{document_id} to include confidence and duration_ms columns in CSV export"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/admin/download/annotated-csv-inline/{document_id} endpoint updated successfully. Now includes confidence and duration_ms columns in CSV export. All required columns present: document_id, sentence_id, subject_id, row_index, sentence_index, sentence_text, tag_domain, tag_category, tag, valence, notes, user_id, user_display, is_skipped, confidence, duration_ms. Optional user_id query parameter working correctly for filtering specific user's annotations. Admin-only access properly enforced (403 for non-admin users). Includes annotations from all users when no filter applied."
 
 
 frontend:
