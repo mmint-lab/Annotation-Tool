@@ -856,7 +856,8 @@ async def download_annotated_paragraphs(document_id: str, current_user: User = D
             para_map[ri] = {'subject_id': s.get('subject_id', ''), 'parts': []}
         para_map[ri]['parts'].append(s.get('text','') + format_sentence_tags(s['id']))
     # Build CSV
-    out = io.StringIO(); w = csv.writer(out)
+    out = io.StringIO()
+    w = csv.writer(out)
     w.writerow(["row_index","subject_id","annotated_paragraph_text"]) 
     for ri in sorted(para_map.keys()):
         subj = para_map[ri]['subject_id']
