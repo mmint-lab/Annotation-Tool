@@ -292,6 +292,18 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - /api/admin/download/annotated-csv-inline/{document_id} endpoint updated successfully. Now includes confidence and duration_ms columns in CSV export. All required columns present: document_id, sentence_id, subject_id, row_index, sentence_index, sentence_text, tag_domain, tag_category, tag, valence, notes, user_id, user_display, is_skipped, confidence, duration_ms. Optional user_id query parameter working correctly for filtering specific user's annotations. Admin-only access properly enforced (403 for non-admin users). Includes annotations from all users when no filter applied."
 
+  - task: "Paragraph Annotation Export Debug"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE DEBUG COMPLETED - Paragraph annotation export functionality is working correctly. Both admin (/api/admin/download/annotated-paragraphs/{document_id}) and user (/api/download/my-annotated-paragraphs/{document_id}) endpoints properly format tags in paragraph text as '[Tags: Domain:Category:Tag(+/-)@UserName]'. Tested 5 documents with different annotation scenarios: 1) Documents with tagged annotations show tags correctly, 2) Documents with only skipped annotations show no tags (correct behavior - skipped annotations are excluded by design), 3) Documents with no annotations show plain text. The format_sentence_tags function correctly excludes skipped annotations (line 881-882 in server.py). User reports of missing tags likely due to testing with documents containing only skipped annotations, which is expected behavior."
+
 
 frontend:
   - task: "Projects Overview analytics (stacked chart + table)"
