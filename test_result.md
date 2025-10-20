@@ -411,27 +411,33 @@ frontend:
 
   - task: "Annotator Download Buttons in Annotation Interface"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added 'My CSV' and 'My Paragraphs' download buttons in the annotation interface header for annotators to export their own work"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE: Annotation interface fails to load due to 405 error on /api/annotations/active-docs endpoint (endpoint does not exist in backend). This prevents testing of 'My CSV' and 'My Paragraphs' download buttons. Code review shows buttons are implemented correctly in StructuredAnnotationInterface component (lines 487-538) with proper download functionality and filename formats. Backend endpoints /api/download/my-annotations-csv/{document_id} and /api/download/my-annotated-paragraphs/{document_id} are working correctly per previous tests."
 
   - task: "Admin Download for Selected Annotator in Manage Annotations Modal"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added 'Download for selected user' button in Manage Annotations modal filter section that uses admin endpoint with user_id filter"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Admin download for selected user functionality working perfectly. 'Download for selected user' button found in Manage Annotations modal. Button correctly disabled when 'All' is selected, enabled when specific user selected. Download successful with correct filename format: 'Rachel Polcyn_annotations_test_discharge_summaries.csv.csv'. All filter dropdowns functional. Admin role-based access working correctly."
 
 
 metadata:
