@@ -1437,6 +1437,20 @@ const Dashboard = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Global Confirm Dialog */}
+        <Dialog open={confirmState.open} onOpenChange={(v) => { if (!v) { confirmState.resolve && confirmState.resolve(false); setConfirmState({ open: false, message: '', resolve: null }); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm</DialogTitle>
+              <DialogDescription>{confirmState.message}</DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => { confirmState.resolve && confirmState.resolve(false); setConfirmState({ open: false, message: '', resolve: null }); }}>Cancel</Button>
+              <Button onClick={() => { confirmState.resolve && confirmState.resolve(true); setConfirmState({ open: false, message: '', resolve: null }); }}>Confirm</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </Tabs>
     </div>
   );
