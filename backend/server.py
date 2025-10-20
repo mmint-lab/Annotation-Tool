@@ -736,7 +736,7 @@ async def download_annotated_csv_inline(document_id: str, user_id: Optional[str]
     user_display = {u['id']: (u.get('full_name') or u.get('email') or u['id']) for u in users}
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["document_id","sentence_id","subject_id","row_index","sentence_index","sentence_text","tag_domain","tag_category","tag","valence","notes","user_id","user_display","is_skipped"]) 
+    writer.writerow(["document_id","sentence_id","subject_id","row_index","sentence_index","sentence_text","tag_domain","tag_category","tag","valence","notes","user_id","user_display","is_skipped","confidence","duration_ms"]) 
     # For each sentence, expand multiple tags into multiple rows; skipped produces a single row with is_skipped True
     for sid, s in sentence_map.items():
         q = {"sentence_id": sid}
@@ -744,12 +744,14 @@ async def download_annotated_csv_inline(document_id: str, user_id: Optional[str]
             q["user_id"] = user_id
         anns = await db.annotations.find(q, {"_id": 0}).to_list(1000)
         if not anns:
-            writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","","","", False])
+            writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","","","","", False,"",""])
             continue
         for a in anns:
+            confidence = a.get("confidence", "")
+            duration_ms = a.get("duration_ms", "")
             if a.get("skipped"):
                 ud = user_display.get(a.get("user_id",""), a.get("user_id",""))
-                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","", a.get("notes",""), a.get("user_id",""), ud, True])
+                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","", a.get("notes",""), a.get("user_id",""), ud, True, confidence, duration_ms])
                 continue
             tags = a.get("tags", [])
             if isinstance(tags, list) and tags:
@@ -759,10 +761,10 @@ async def download_annotated_csv_inline(document_id: str, user_id: Optional[str]
                     tag = t.get("tag") if isinstance(t, dict) else getattr(t, "tag", "")
                     valence = t.get("valence") if isinstance(t, dict) else getattr(t, "valence", "")
                     ud = user_display.get(a.get("user_id",""), a.get("user_id",""))
-                    writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), domain, category, tag, valence, a.get("notes",""), a.get("user_id",""), ud, False])
+                    writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), domain, category, tag, valence, a.get("notes",""), a.get("user_id",""), ud, False, confidence, duration_ms])
             else:
                 ud = user_display.get(a.get("user_id",""), a.get("user_id",""))
-                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","", a.get("notes",""), a.get("user_id",""), ud, False])
+                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","", a.get("notes",""), a.get("user_id",""), ud, False, confidence, duration_ms])
     output.seek(0)
     return StreamingResponse(io.BytesIO(output.getvalue().encode()), media_type="text/csv", headers={"Content-Disposition": f"inline; filename=annotated_inline_{document['filename']}.csv"})
 
