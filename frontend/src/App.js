@@ -346,7 +346,7 @@ const ActiveDocsPanel = ({ onOpenDoc }) => {
 };
 
 // Structured Annotation Interface
-const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange, tagStructure, onAnnotate, onDeleteAnnotation, onBulkDeleteAnnotations, currentDocName }) => {
+const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange, tagStructure, onAnnotate, onDeleteAnnotation, onBulkDeleteAnnotations, currentDocName, documentId }) => {
   const { user } = useAuth();
   const [selectedTags, setSelectedTags] = useState([]);
   const [notes, setNotes] = useState("");
