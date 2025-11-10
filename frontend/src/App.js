@@ -1220,6 +1220,45 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>User Activity Log</CardTitle>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const url = `${API}/admin/download/activity-log`;
+                        const token = localStorage.getItem('token');
+                        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                        if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+                        const blob = await res.blob();
+                        const a = document.createElement('a');
+                        const u = window.URL.createObjectURL(blob);
+                        a.href = u;
+                        a.setAttribute('download', `activity_log_${new Date().toISOString().split('T')[0]}.csv`);
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(u);
+                        showToast('Activity log downloaded', 'success');
+                      } catch (e) {
+                        showToast('Error downloading activity log: ' + (e.message || 'Please try again.'), 'error');
+                      }
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-1" /> Download Activity Log
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">
+                  Download a comprehensive CSV log of all user activities including page navigation, tag clicks, and sentence transitions with timestamps.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
         )}
 
