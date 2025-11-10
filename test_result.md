@@ -1164,17 +1164,53 @@ backend:
         comment: "✅ PASSED - /api/auth/me/profile endpoint working correctly. Updates full_name field in user profile and returns updated user object. Proper authentication required."
 
 frontend:
-  - task: "Frontend Testing"
+  - task: "Tag Valence UI Changes"
     implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
-    priority: "low"
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
       - working: "NA"
-        agent: "testing"
-        comment: "Frontend testing not performed by testing agent"
+        agent: "main"
+        comment: "New UI improvements for tag valence - selected tags should turn bright green/red with Plus/Minus buttons instead of X"
+
+  - task: "Confidence Slider"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "New confidence slider (0-5 range) in Selected Tags section with proper labels and value display"
+
+  - task: "Timestamp Tracking"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Activity tracking for user actions with admin download functionality for activity logs"
+
+  - task: "Document Timestamps"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Document upload and last edited timestamps display in Documents tab"
 
 metadata:
   created_by: "testing_agent"
