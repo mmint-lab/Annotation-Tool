@@ -1166,15 +1166,18 @@ backend:
 frontend:
   - task: "Tag Valence UI Changes"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "New UI improvements for tag valence - selected tags should turn bright green/red with Plus/Minus buttons instead of X"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Tag valence UI working correctly. Plus/Minus buttons visible for all tags in SDOH taxonomy. Existing annotations show proper green (positive) and red (negative) color coding. Tag selection interface fully functional with proper button structure."
 
   - task: "Confidence Slider"
     implemented: true
