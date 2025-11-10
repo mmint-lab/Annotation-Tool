@@ -1196,15 +1196,18 @@ frontend:
 
   - task: "Timestamp Tracking"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Activity tracking for user actions with admin download functionality for activity logs"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE - /api/activities endpoint returning 422 errors preventing activity logging. Admin 'Download Activity Log' button is present and enabled, but activity tracking is failing. Frontend code shows proper logActivity implementation (lines 362-376) but backend endpoint has validation issues. This prevents proper timestamp tracking of user actions (page_navigation, tag_click, sentence_transition)."
 
   - task: "Document Timestamps"
     implemented: true
