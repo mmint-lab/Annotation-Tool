@@ -460,7 +460,6 @@ async def create_annotation(annotation_data: AnnotationCreate, current_user: Use
             duration_ms=annotation_data.duration_ms
         )
         await db.annotations.insert_one(annotation.dict())
-        return annotation
     else:
         # Remove any existing 'skip' annotation by this user for the sentence, keep other tagged annotations if desired
         await db.annotations.delete_many({
@@ -478,7 +477,18 @@ async def create_annotation(annotation_data: AnnotationCreate, current_user: Use
             duration_ms=annotation_data.duration_ms
         )
         await db.annotations.insert_one(annotation.dict())
-        return annotation
+    
+    # Update document's last_modified_by timestamp for this user
+    sentence = await db.sentences.find_one({"id": annotation_data.sentence_id})
+    if sentence:
+        document_id = sentence.get("document_id")
+        if document_id:
+            await db.documents.update_one(
+                {"id": document_id},
+                {"$set": {f"last_modified_by.{current_user.id}": datetime.utcnow().isoformat()}}
+            )
+    
+    return annotation
 
 @api_router.delete("/annotations/{annotation_id}")
 async def delete_annotation(annotation_id: str, current_user: User = Depends(get_current_user)):
