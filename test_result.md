@@ -1249,4 +1249,30 @@ agent_communication:
       - Tested user export: Shows tags only from current user
       - Format verified: "Economic Stability:Employment:Unemployed(-)@Test User"
       
-      CONCLUSION: No bug exists. Functionality working as designed. Users need tagged (not skipped) annotations to see tags in paragraph exports.
+      CONCLUSION: No bug exists. F
+  - agent: "testing"
+    message: |
+      ✅ DETAILED PARAGRAPH EXPORT INVESTIGATION COMPLETED - Conducted comprehensive step-by-step investigation following user's specific request:
+      
+      INVESTIGATION STEPS COMPLETED:
+      1. ✅ Admin login successful (admin@sdoh.com / admin123)
+      2. ✅ Found test_discharge_summaries.csv document (ID: 155984e7-57b6-4dd6-b3e1-93632ba41fc4)
+      3. ✅ Document has 17 sentences with 10 annotations (7 tagged, 3 skipped)
+      4. ✅ Tagged annotations have proper structure: domain, category, tag, valence
+      5. ✅ Admin paragraph export shows tags correctly formatted as [Tags: Domain:Category:Tag(+/-)@UserName]
+      6. ✅ Created fresh annotation with 2 tags and verified immediate appearance in export
+      7. ✅ User-specific export endpoint also working correctly
+      
+      ACTUAL CSV CONTENT VERIFIED:
+      - Tags appear in annotated_paragraph_text column as designed
+      - Format: "Patient is a 45-year-old male... [Tags: Economic Stability:Employment:Unemployed(-)@Test User, Social and Community Context:Social Cohesion:Social Isolation(-)@SDOH Administrator]"
+      - Multiple tags per sentence properly comma-separated
+      - User attribution correctly included (@UserName)
+      
+      TECHNICAL VERIFICATION:
+      - format_sentence_tags function working correctly (lines 878-903 in server.py)
+      - Skipped annotations properly excluded (lines 881-882)
+      - Tag structure validation confirmed: domain:category:tag(valence)@user
+      - Both admin and user endpoints functional
+      
+      FINAL CONCLUSION: Paragraph export functionality is working as designed. User issue likely due to testing with documents containing only skipped annotations, which are intentionally excluded from paragraph reconstruction by design.unctionality working as designed. Users need tagged (not skipped) annotations to see tags in paragraph exports.
