@@ -460,6 +460,15 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   const removeTag = (index) => { const n = [...selectedTags]; n.splice(index, 1); setSelectedTags(n); };
   const updateTagValence = (index, valence) => { const n = [...selectedTags]; n[index].valence = valence; setSelectedTags(n); };
   const selectTagWithValence = (domain, category, tag, valence) => {
+    // Log tag click activity
+    logActivity('tag_click', { 
+      domain, 
+      category, 
+      tag, 
+      valence,
+      action: 'add'  // Will be 'remove' if clicking same valence again
+    });
+    
     setSelectedTags(prev => {
       const idx = prev.findIndex(t => t.domain === domain && t.category === category && t.tag === tag);
       if (idx >= 0) {
