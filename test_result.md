@@ -1190,6 +1190,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "New confidence slider (0-5 range) in Selected Tags section with proper labels and value display"
+      - working: "NA"
+        agent: "testing"
+        comment: "⚠️ UNABLE TO TEST - Confidence slider not visible due to 422 errors from /api/activities endpoint preventing full annotation interface load. Code review shows slider is implemented in lines 715-730 with proper range (0-5), labels ('Not confident' to 'Completely confident'), and value display. Requires fixing activities endpoint to complete testing."
 
   - task: "Timestamp Tracking"
     implemented: true
