@@ -605,9 +605,15 @@ async def get_active_docs(scope: str = Query("me"), current_user: User = Depends
 # User Activity Tracking
 # ========================
 @api_router.post("/activities")
-async def log_activity(activity: UserActivity, current_user: User = Depends(get_current_user)):
+async def log_activity(activity_data: UserActivityCreate, current_user: User = Depends(get_current_user)):
     """Log user activity for timestamp tracking"""
-    activity.user_id = current_user.id  # Always use authenticated user's ID
+    activity = UserActivity(
+        user_id=current_user.id,
+        document_id=activity_data.document_id,
+        sentence_id=activity_data.sentence_id,
+        action_type=activity_data.action_type,
+        metadata=activity_data.metadata or {}
+    )
     await db.user_activities.insert_one(activity.dict())
     return {"status": "logged"}
 
