@@ -1181,11 +1181,11 @@ frontend:
 
   - task: "Confidence Slider"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -1193,6 +1193,9 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "⚠️ UNABLE TO TEST - Confidence slider not visible due to 422 errors from /api/activities endpoint preventing full annotation interface load. Code review shows slider is implemented in lines 715-730 with proper range (0-5), labels ('Not confident' to 'Completely confident'), and value display. Requires fixing activities endpoint to complete testing."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Confidence slider fully functional after /api/activities endpoint fix. Slider appears below selected tags with correct range (0-5), proper labels ('Not confident' to 'Completely confident'), default value of 3, and value updates correctly when moved. Confidence values are properly saved with annotations."
 
   - task: "Timestamp Tracking"
     implemented: true
