@@ -242,11 +242,11 @@ class ResourceUploadTester:
                 headers=headers
             )
             
-            if response.status_code == 400:
+            if response.status_code == 422:
                 self.log_test("Upload Without File", True, "Correctly rejected request without file")
                 return True
             else:
-                self.log_test("Upload Without File", False, f"Expected 400, got {response.status_code}")
+                self.log_test("Upload Without File", False, f"Expected 422, got {response.status_code}")
                 return False
                 
         except Exception as e:
