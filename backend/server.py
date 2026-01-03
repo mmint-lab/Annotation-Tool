@@ -1498,7 +1498,7 @@ async def delete_resource(resource_id: str, current_user: User = Depends(get_adm
     # Delete from GridFS
     try:
         await fs_bucket.delete(oid)
-    except Exception as e:
+    except Exception:
         # If not found in GridFS, continue to delete metadata
         pass
     
