@@ -1446,7 +1446,7 @@ const Dashboard = () => {
                   {resources.map((r) => (
                     <div key={r.id} className="p-3 border rounded-md">
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{r.filename}</p>
                           <p className="text-xs text-gray-500">{r.kind === 'link' ? 'External link' : `${Math.round((r.size||0)/1024)} KB`} • uploaded {new Date(r.uploaded_at).toLocaleString()}</p>
                         </div>
@@ -1454,14 +1454,68 @@ const Dashboard = () => {
                           {r.kind === 'link' ? (
                             <Button asChild variant="outline" size="sm"><a href={r.link_url} target="_blank" rel="noreferrer">Open</a></Button>
                           ) : (
-                            <Button variant="outline" size="sm" onClick={async () => { try { const url = `${API}/resources/${r.id}/download`; const token = localStorage.getItem('token'); const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } }); if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`); const blob = await res.blob(); const a = document.createElement('a'); const u = window.URL.createObjectURL(blob); a.href = u; a.setAttribute('download', r.filename || 'resource'); document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(u); } catch (e) { alert('Error downloading: ' + (e.message || 'Please try again.')); } }}>Download</Button>
+                            <>
+                              {r.content_type && (r.content_type.startsWith('image/') || r.content_type === 'application/pdf') && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => setExpandedResourceId(expandedResourceId === r.id ? null : r.id)}
+                                >
+                                  {expandedResourceId === r.id ? 'Hide Preview' : 'Show Preview'}
+                                </Button>
+                              )}
+                              <Button variant="outline" size="sm" onClick={async () => { 
+                                try { 
+                                  const url = `${API}/resources/${r.id}/download`; 
+                                  const token = localStorage.getItem('token'); 
+                                  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } }); 
+                                  if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`); 
+                                  const blob = await res.blob(); 
+                                  const a = document.createElement('a'); 
+                                  const u = window.URL.createObjectURL(blob); 
+                                  a.href = u; 
+                                  a.setAttribute('download', r.filename || 'resource'); 
+                                  document.body.appendChild(a); 
+                                  a.click(); 
+                                  document.body.removeChild(a); 
+                                  window.URL.revokeObjectURL(u); 
+                                  showToast('Resource downloaded', 'success');
+                                } catch (e) { 
+                                  showToast('Error downloading: ' + (e.message || 'Please try again.'), 'error'); 
+                                } 
+                              }}>Download</Button>
+                            </>
                           )}
-                          {user?.role === 'admin' && (<Button variant="destructive" size="sm" onClick={async () => { if (!window.confirm('Delete this resource?')) return; try { await axios.delete(`${API}/admin/resources/${r.id}`); fetchResources(resourcesPage); } catch (e) { alert('Error deleting resource: ' + (e.response?.data?.detail || 'Please try again.')); } }}>Delete</Button>)}
+                          {user?.role === 'admin' && (
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              onClick={async () => { 
+                                const confirmed = await new Promise((resolve) => {
+                                  setConfirmState({
+                                    open: true,
+                                    message: `Delete resource "${r.filename}"?`,
+                                    resolve
+                                  });
+                                });
+                                if (!confirmed) return;
+                                try { 
+                                  await axios.delete(`${API}/admin/resources/${r.id}`); 
+                                  showToast('Resource deleted', 'success');
+                                  fetchResources(resourcesPage); 
+                                } catch (e) { 
+                                  showToast('Error deleting resource: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); 
+                                } 
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          )}
                         </div>
                       </div>
-                      {/* Inline Preview for images and PDFs */}
-                      {r.kind !== 'link' && r.content_type && (
-                        <div className="mt-2">
+                      {/* Collapsible Preview for images and PDFs */}
+                      {expandedResourceId === r.id && r.kind !== 'link' && r.content_type && (
+                        <div className="mt-3 pt-3 border-t">
                           {r.content_type.startsWith('image/') && (
                             <img src={`${API}/resources/${r.id}/download?token=${encodeURIComponent(localStorage.getItem('token')||'')}`} alt={r.filename} className="max-h-64 rounded border" />
                           )}
