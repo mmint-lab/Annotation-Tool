@@ -1217,7 +1217,10 @@ frontend:
         comment: "New confidence slider (0-5 range) in Selected Tags section with proper labels and value display"
       - working: "NA"
         agent: "testing"
-        comment: "⚠️ UNABLE TO TEST - Confidence slider not visible due to 422 errors from /api/activities endpoint preventing full annotation interface load. Code review shows slider is implemented in lines 715-730 with proper range (0-5), labels ('Not confident' to 'Completely confident'), and value display. Requires fixing activities endpoint to complete testing."
+        comment: "⚠️ UNABLE TO TEST - Confidence slider not visible due to 422 errors from /api/activities endpoint preventing full annotation interface load. Code review shows slider is implemented in lines 715-730 with proper range"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Updated 1-5 confidence scale with labels fully functional. VERIFIED REQUIREMENTS: 1) ✅ 5 clickable circles per tag representing confidence levels 1, 2, 3, 4, 5 (NO position 0), 2) ✅ Default value is 3 (middle circle filled), 3) ✅ Labels 'Least confident' (left) and 'Most confident' (right) properly displayed, 4) ✅ Progress bar calculation correct: confidence 1=0%, confidence 3=50%, confidence 5=100%, 5) ✅ All confidence levels (1-5) functional and responsive with proper visual feedback, 6) ✅ Multiple tags maintain independent confidence settings, 7) ✅ Save functionality works with 1-5 confidence values. Screenshots captured showing default state, confidence level 1, confidence level 5, and multiple tags with different confidence levels. The updated confidence scale meets all requirements from the review request - scale starts at 1 (not 0), has exactly 5 levels, proper labels, and correct progress bar calculations." (0-5), labels ('Not confident' to 'Completely confident'), and value display. Requires fixing activities endpoint to complete testing."
       - working: true
         agent: "testing"
         comment: "✅ PASSED - Confidence slider fully functional after /api/activities endpoint fix. Slider appears below selected tags with correct range (0-5), proper labels ('Not confident' to 'Completely confident'), default value of 3, and value updates correctly when moved. Confidence values are properly saved with annotations."
