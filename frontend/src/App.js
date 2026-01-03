@@ -751,8 +751,8 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           <div className="space-y-4 border-t pt-4">
             <div className="flex items-center justify-between">
               <h4 className="font-medium text-gray-900">Add Tags:</h4>
-              <div className="text-xs text-gray-600">
-                Legend: 1–9 quick add/remove • Enter Save • S Skip • [/] Prev/Next • P/N last tag valence • C Clear
+              <div className="text-xs text-gray-500">
+                Shortcuts: Enter save • S skip • [/] prev/next • C clear all
               </div>
             </div>
             {Object.entries(tagStructure).map(([domain, categories]) => (
