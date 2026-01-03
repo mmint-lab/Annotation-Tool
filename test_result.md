@@ -1178,6 +1178,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ PASSED - Tag valence UI working correctly. Plus/Minus buttons visible for all tags in SDOH taxonomy. Existing annotations show proper green (positive) and red (negative) color coding. Tag selection interface fully functional with proper button structure."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE RE-TEST PASSED - Updated tag button color behavior fully functional. POSITIVE VALENCE: Entire button (+ Employed -) turns GREEN background with WHITE text, no visible vertical line. NEGATIVE VALENCE: Entire button turns RED background with WHITE text. UNSELECTED STATE: White background with gray text and gray border. MULTIPLE TAGS: Can select multiple tags with different valences simultaneously. BUTTON STRUCTURE: Unified containers with no visible separators between + tag name and - button. All requirements from review request successfully verified through visual testing."
 
   - task: "Confidence Slider"
     implemented: true
