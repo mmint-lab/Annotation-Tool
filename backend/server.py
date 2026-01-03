@@ -16,6 +16,7 @@ import bcrypt
 import csv
 import io
 import json
+import mammoth
 import re
 from collections import defaultdict
 from urllib.parse import urlparse
