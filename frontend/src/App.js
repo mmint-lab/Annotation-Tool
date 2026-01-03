@@ -1455,7 +1455,7 @@ const Dashboard = () => {
                             <Button asChild variant="outline" size="sm"><a href={r.link_url} target="_blank" rel="noreferrer">Open</a></Button>
                           ) : (
                             <>
-                              {r.content_type && (r.content_type.startsWith('image/') || r.content_type === 'application/pdf') && (
+                              {r.content_type && (r.content_type.startsWith('image/') || r.content_type === 'application/pdf' || r.content_type.includes('word') || r.content_type.includes('msword') || r.filename.endsWith('.doc') || r.filename.endsWith('.docx')) && (
                                 <Button 
                                   variant="outline" 
                                   size="sm" 
