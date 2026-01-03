@@ -695,34 +695,32 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
               </div>
               <div className="space-y-2">
                 {selectedTags.map((tag, index) => (
-                  <div key={index} className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${tag.valence === 'positive' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded font-medium ${tag.valence === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {tag.valence === 'positive' ? '+' : '-'}
-                      </span>
-                      <span className="text-sm font-medium text-gray-900">{tag.domain}: {tag.category} - {tag.tag}</span>
+                  <div key={index} className={`p-3 rounded-lg border transition-colors ${tag.valence === 'positive' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded font-medium ${tag.valence === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {tag.valence === 'positive' ? '+' : '-'}
+                        </span>
+                        <span className="text-sm font-medium text-gray-900">{tag.domain}: {tag.category} - {tag.tag}</span>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => removeTag(index)} className="h-8 w-8 p-0 hover:bg-gray-100" title="Remove tag">
+                        <X className="h-4 w-4 text-gray-600" />
+                      </Button>
                     </div>
-                    <Button size="sm" variant="ghost" onClick={() => removeTag(index)} className="h-8 w-8 p-0 hover:bg-gray-100" title="Remove tag">
-                      <X className="h-4 w-4 text-gray-600" />
-                    </Button>
+                    <div className="flex items-center gap-2 pl-2">
+                      <span className="text-xs text-gray-600 min-w-[80px]">Confidence:</span>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="5" 
+                        value={tag.confidence || 3}
+                        onChange={(e) => updateTagConfidence(index, parseInt(e.target.value))}
+                        className="flex-1 h-1.5 bg-gray-300 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <span className="text-sm font-bold text-blue-600 min-w-[20px]">{tag.confidence || 3}</span>
+                    </div>
                   </div>
                 ))}
-              </div>
-              <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
-                <Label className="text-sm font-medium">Confidence Level</Label>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-600 min-w-[120px]">Not confident</span>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="5" 
-                    value={confidence}
-                    onChange={(e) => setConfidence(parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <span className="text-xs text-gray-600 min-w-[120px] text-right">Completely confident</span>
-                  <span className="text-lg font-bold text-blue-600 min-w-[30px]">{confidence}</span>
-                </div>
               </div>
             </div>
           )}
