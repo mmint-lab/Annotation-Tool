@@ -1460,6 +1460,39 @@ agent_communication:
     message: "✅ REGRESSION TESTING COMPLETED - All 24 regression tests passed successfully. Specific verification completed for: 1) CSV upload with note_id/text columns storing subject_id in sentences, 2) /api/analytics/enhanced returning per_user, sentences_left_overall, irr_pairs, 3) /api/messages RBAC (list/post/delete with proper permissions), 4) /api/auth/change-password updating hash and blocking invalid current passwords, 5) /api/auth/me/profile updating full_name, 6) All existing endpoints (overview, tag-prevalence, documents, annotations, bulk delete) still working. No failures detected in regression check."
   - agent: "testing"
     message: |
+      ✅ RESOURCE UPLOAD/DOWNLOAD TESTING COMPLETED - Fixed GridFS functionality fully verified:
+      
+      COMPREHENSIVE TEST RESULTS (9/9 PASSED):
+      
+      UPLOAD FUNCTIONALITY:
+      ✅ PDF Upload: POST /api/admin/resources/upload successfully uploads PDF files with proper resource ID response
+      ✅ Image Upload: PNG files upload successfully with proper metadata storage
+      ✅ Admin Access Control: Non-admin users properly denied with 403 Forbidden
+      ✅ File Validation: Unsupported file types (.xyz) properly rejected with 400 Bad Request
+      ✅ Parameter Validation: Missing file parameter properly rejected with 422 Unprocessable Entity
+      
+      DOWNLOAD FUNCTIONALITY:
+      ✅ PDF Download: GET /api/resources/{id}/download returns exact content match (328 bytes)
+      ✅ Image Download: PNG files download with exact content match (84 bytes)
+      ✅ Content Headers: Proper content-type and Content-Disposition headers returned
+      
+      METADATA STORAGE:
+      ✅ Resource Metadata: All uploaded files appear in /api/resources endpoint with correct metadata
+      ✅ GridFS Integration: Files properly stored in MongoDB GridFS with metadata in resources_meta collection
+      
+      GRIDFS API FIXES VERIFIED:
+      - upload_from_stream() method working correctly (replaced deprecated open_upload_stream)
+      - download_to_stream() method working correctly (replaced deprecated open_download_stream)
+      - Previous "TypeError: object AsyncIOMotorGridIn can't be used in 'await' expression" error resolved
+      
+      BACKEND LOGS CONFIRMATION:
+      - Successful uploads: "POST /api/admin/resources/upload HTTP/1.1" 200 OK
+      - Successful downloads: "GET /api/resources/{id}/download HTTP/1.1" 200 OK
+      - Proper error handling: 400/403/422 status codes as expected
+      
+      The resource upload/download functionality is now fully operational with the corrected GridFS API usage.
+  - agent: "testing"
+    message: |
       ✅ ADMIN ROLE-BASED ENDPOINTS IMPLEMENTATION & TESTING COMPLETED - Successfully implemented and tested all admin endpoints requested in review:
       
       ADMIN USER MANAGEMENT ENDPOINTS:
