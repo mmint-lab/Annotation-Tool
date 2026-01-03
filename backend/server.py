@@ -1506,7 +1506,9 @@ async def delete_resource(resource_id: str, current_user: User = Depends(get_adm
     # Delete metadata
     result = await db.resources_meta.delete_one({"id": resource_id})
     if result.deleted_count == 0:
-
+        raise HTTPException(status_code=404, detail="Resource not found")
+    
+    return {"message": "Resource deleted successfully"}
 
 @api_router.get("/resources/{resource_id}/preview")
 async def preview_resource(resource_id: str, current_user: User = Depends(get_current_user)):
