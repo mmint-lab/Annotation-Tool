@@ -1239,6 +1239,21 @@ frontend:
         agent: "testing"
         comment: "✅ PASSED - Activity tracking fully functional after /api/activities endpoint fix. User Activity Log section found in Admin tab with functional 'Download Activity Log' button. Activity logging properly tracks user actions (page_navigation, tag_click, sentence_transition) during annotation sessions. CSV download functionality working correctly."
 
+  - task: "Clickable Confidence Circles in Selected Tags"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "New clickable confidence circles in Selected Tags section with 6 circles representing confidence levels 0-5, replacing slider interface"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Clickable confidence circles functionality fully verified and working perfectly. REQUIREMENTS VERIFIED: 1) ✅ Admin login successful (admin@sdoh.com / admin123), 2) ✅ Annotation interface accessible via Annotate tab → Resume, 3) ✅ Economic Stability tags selectable (Employed, Unemployed), 4) ✅ Selected Tags section displays confidence circles correctly, 5) ✅ 6 circles per tag representing levels 0, 1, 2, 3, 4, 5, 6) ✅ Circles evenly spaced across slider, 7) ✅ Default confidence level 3 (circle filled blue, progress bar at 60%), 8) ✅ Clicking circles changes confidence values correctly, 9) ✅ Progress bar extends from start to current value position, 10) ✅ Current value displayed on right side, 11) ✅ Multiple tags can have independent confidence levels, 12) ✅ Hover effects working (scale-125 and border-blue-500), 13) ✅ All confidence levels (0-5) functional, 14) ✅ Visual styling correct: filled circles blue (bg-blue-600), empty circles white (bg-white) with gray borders. Screenshots captured showing default state, position changes, and mixed confidence levels. Implementation matches all requirements from review request."
+
   - task: "Document Timestamps"
     implemented: true
     working: true
