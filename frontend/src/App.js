@@ -1604,19 +1604,47 @@ const Dashboard = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Default Project Modal */}
-        <Dialog open={defaultProjectModalOpen} onOpenChange={setDefaultProjectModalOpen}>
+        {/* Assign Users Modal */}
+        <Dialog open={assignUsersModalOpen} onOpenChange={setAssignUsersModalOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Set Default Project</DialogTitle>
-              <DialogDescription>New uploads will use this project name.</DialogDescription>
+              <DialogTitle>Assign Users to Document</DialogTitle>
+              <DialogDescription>Select users who can annotate this document: {selectedDocForAssignment?.filename}</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <Label>Project Name</Label>
-              <Input value={defaultProjectInput} onChange={(e) => setDefaultProjectInput(e.target.value)} />
+              <Label>Select Users</Label>
+              <div className="max-h-64 overflow-y-auto border rounded p-2 space-y-2">
+                {users.filter(u => u.role === 'annotator').map((u) => (
+                  <div key={u.id} className="flex items-center space-x-2">
+                    <Checkbox 
+                      checked={selectedUserIds.includes(u.id)} 
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedUserIds(prev => [...prev, u.id]);
+                        } else {
+                          setSelectedUserIds(prev => prev.filter(id => id !== u.id));
+                        }
+                      }} 
+                    />
+                    <Label className="cursor-pointer">{u.full_name || u.email}</Label>
+                  </div>
+                ))}
+              </div>
               <div className="flex items-center gap-2 justify-end pt-2">
-                <Button variant="outline" onClick={() => setDefaultProjectModalOpen(false)}>Cancel</Button>
-                <Button onClick={saveDefaultProject}>Save</Button>
+                <Button variant="outline" onClick={() => { setAssignUsersModalOpen(false); setSelectedDocForAssignment(null); setSelectedUserIds([]); }}>Cancel</Button>
+                <Button onClick={async () => {
+                  if (!selectedDocForAssignment) return;
+                  try {
+                    await axios.post(`${API}/admin/documents/${selectedDocForAssignment.id}/assign-users`, { user_ids: selectedUserIds });
+                    showToast('Users assigned successfully', 'success');
+                    fetchDocuments();
+                    setAssignUsersModalOpen(false);
+                    setSelectedDocForAssignment(null);
+                    setSelectedUserIds([]);
+                  } catch (e) {
+                    showToast('Error assigning users: ' + (e.response?.data?.detail || e.message || 'Please try again.'), 'error');
+                  }
+                }}>Save</Button>
               </div>
             </div>
           </DialogContent>
