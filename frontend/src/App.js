@@ -1138,16 +1138,6 @@ const Dashboard = () => {
   const toggleAnnChecked = (id) => { setSelectedAnnIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]); };
   const bulkDeleteDocAnnotations = async () => { if (!selectedAnnIds.length) return; if (!window.confirm(`Delete ${selectedAnnIds.length} annotations from this document?`)) return; await bulkDeleteAnnotations(selectedAnnIds); };
 
-  const saveDefaultProject = async () => {
-    try {
-      await axios.post(`${API}/admin/settings/default-project`, { project_name: defaultProjectInput });
-      setDefaultProject(defaultProjectInput);
-      setDefaultProjectModalOpen(false);
-      showToast('Default project updated', 'success');
-    } catch (e) {
-      showToast('Error updating default project: ' + (e.response?.data?.detail || 'Please try again.'), 'error');
-    }
-  };
 
   // Tabs: Admin (includes analytics), Documents, Annotate, Resources
   const tabsToShow = user?.role === 'admin'
