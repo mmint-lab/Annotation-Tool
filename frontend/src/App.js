@@ -701,7 +701,6 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                   </div>
                 ))}
               </div>
-              </div>
               <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
                 <Label className="text-sm font-medium">Confidence Level</Label>
                 <div className="flex items-center gap-3">
