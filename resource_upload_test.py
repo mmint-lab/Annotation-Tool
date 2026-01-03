@@ -167,7 +167,7 @@ class ResourceUploadTester:
             }
             
             response = requests.get(
-                f"{self.base_url}/resources/{resource_id}",
+                f"{self.base_url}/resources/{resource_id}/download",
                 headers=headers
             )
             
