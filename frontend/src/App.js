@@ -1513,7 +1513,7 @@ const Dashboard = () => {
                           )}
                         </div>
                       </div>
-                      {/* Collapsible Preview for images and PDFs */}
+                      {/* Collapsible Preview for images, PDFs, and Word docs */}
                       {expandedResourceId === r.id && r.kind !== 'link' && r.content_type && (
                         <div className="mt-3 pt-3 border-t">
                           {r.content_type.startsWith('image/') && (
@@ -1521,6 +1521,9 @@ const Dashboard = () => {
                           )}
                           {r.content_type === 'application/pdf' && (
                             <iframe title={r.filename} src={`${API}/resources/${r.id}/download?token=${encodeURIComponent(localStorage.getItem('token')||'')}`} className="w-full h-96 border rounded" />
+                          )}
+                          {(r.content_type.includes('word') || r.content_type.includes('msword') || r.filename.endsWith('.doc') || r.filename.endsWith('.docx')) && (
+                            <iframe title={r.filename} src={`${API}/resources/${r.id}/preview?token=${encodeURIComponent(localStorage.getItem('token')||'')}`} className="w-full h-96 border rounded bg-white" />
                           )}
                         </div>
                       )}
