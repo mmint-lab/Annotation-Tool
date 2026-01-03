@@ -973,6 +973,7 @@ const Dashboard = () => {
   const [resources, setResources] = useState([]);
   const [resourceFile, setResourceFile] = useState(null);
   const [resourcePreview, setResourcePreview] = useState(null);
+  const [expandedResourceId, setExpandedResourceId] = useState(null);
 
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [selectAllDocs, setSelectAllDocs] = useState(false);
