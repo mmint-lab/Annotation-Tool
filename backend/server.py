@@ -1476,9 +1476,12 @@ async def download_resource(resource_id: str, current_user: Optional[User] = Dep
     meta = await db.resources_meta.find_one({"id": resource_id}, {"_id": 0})
     if not meta:
         raise HTTPException(status_code=404, detail="Not found")
-    grid_out = await fs_bucket.open_download_stream(oid)
-    data = await grid_out.read()
-    return StreamingResponse(io.BytesIO(data), media_type=meta.get('content_type') or 'application/octet-stream', headers={
+    
+    # Download from GridFS
+    data = await fs_bucket.download_to_stream(oid, io.BytesIO())
+    data.seek(0)
+    
+    return StreamingResponse(data, media_type=meta.get('content_type') or 'application/octet-stream', headers={
         "Content-Disposition": f"inline; filename={meta['filename']}"
     })
 
