@@ -690,7 +690,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                 <h4 className="font-medium text-gray-900">Selected Tags</h4>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" onClick={() => setSelectedTags([])}>Clear all (C)</Button>
-                  <span className="text-xs text-gray-500">Shortcuts: 1-9 add/remove quick tags • Enter save • S skip • [/] prev/next • P/N valence</span>
+                  <span className="text-xs text-gray-500">Shortcuts: Enter save • S skip • [/] prev/next • C clear all</span>
                 </div>
               </div>
               <div className="space-y-2">
