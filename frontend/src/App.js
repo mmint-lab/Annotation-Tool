@@ -968,6 +968,7 @@ const Dashboard = () => {
   const [assignUsersModalOpen, setAssignUsersModalOpen] = useState(false);
   const [selectedDocForAssignment, setSelectedDocForAssignment] = useState(null);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [users, setUsers] = useState([]);
 
   const [resources, setResources] = useState([]);
   const [resourceFile, setResourceFile] = useState(null);
