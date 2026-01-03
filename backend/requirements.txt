@@ -25,4 +25,5 @@ jq>=1.6.0
 typer>=0.9.0
 bcrypt>=4.0.1
 python-multipart>=0.0.9
-matplotlib>=3.8.0
+matplotlib>=3.8.0mammoth==1.11.0
+python-docx==1.2.0
