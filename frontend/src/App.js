@@ -707,34 +707,40 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                         <X className="h-4 w-4 text-gray-600" />
                       </Button>
                     </div>
-                    <div className="flex items-center gap-2 pl-2">
-                      <span className="text-xs text-gray-600 min-w-[80px]">Confidence:</span>
-                      <div className="flex-1 relative">
-                        {/* Background track */}
-                        <div className="h-1 bg-gray-300 rounded-full absolute top-1/2 left-0 right-0 -translate-y-1/2" />
-                        {/* Filled track up to current value */}
-                        <div 
-                          className="h-1 bg-blue-500 rounded-full absolute top-1/2 left-0 -translate-y-1/2"
-                          style={{ width: `${((tag.confidence || 3) / 5) * 100}%` }}
-                        />
-                        {/* Clickable circles at each position */}
-                        <div className="flex justify-between items-center relative h-6">
-                          {[0, 1, 2, 3, 4, 5].map((level) => (
-                            <button
-                              key={level}
-                              type="button"
-                              onClick={() => updateTagConfidence(index, level)}
-                              className={`w-4 h-4 rounded-full border-2 transition-all hover:scale-125 ${
-                                (tag.confidence || 3) === level 
-                                  ? 'bg-blue-600 border-blue-600' 
-                                  : 'bg-white border-gray-400 hover:border-blue-500'
-                              }`}
-                              title={`Set confidence to ${level}`}
-                            />
-                          ))}
+                    <div className="space-y-1 pl-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600 min-w-[80px]">Confidence:</span>
+                        <div className="flex-1 relative">
+                          {/* Background track */}
+                          <div className="h-1 bg-gray-300 rounded-full absolute top-1/2 left-0 right-0 -translate-y-1/2" />
+                          {/* Filled track up to current value */}
+                          <div 
+                            className="h-1 bg-blue-500 rounded-full absolute top-1/2 left-0 -translate-y-1/2"
+                            style={{ width: `${((tag.confidence || 3) - 1) / 4 * 100}%` }}
+                          />
+                          {/* Clickable circles at each position */}
+                          <div className="flex justify-between items-center relative h-6">
+                            {[1, 2, 3, 4, 5].map((level) => (
+                              <button
+                                key={level}
+                                type="button"
+                                onClick={() => updateTagConfidence(index, level)}
+                                className={`w-4 h-4 rounded-full border-2 transition-all hover:scale-125 ${
+                                  (tag.confidence || 3) === level 
+                                    ? 'bg-blue-600 border-blue-600' 
+                                    : 'bg-white border-gray-400 hover:border-blue-500'
+                                }`}
+                                title={`Set confidence to ${level}`}
+                              />
+                            ))}
+                          </div>
                         </div>
+                        <span className="text-sm font-bold text-blue-600 min-w-[20px]">{tag.confidence || 3}</span>
                       </div>
-                      <span className="text-sm font-bold text-blue-600 min-w-[20px]">{tag.confidence || 3}</span>
+                      <div className="flex items-center gap-2 pl-[80px]">
+                        <span className="text-xs text-gray-500 flex-1">Least confident</span>
+                        <span className="text-xs text-gray-500 flex-1 text-right">Most confident</span>
+                      </div>
                     </div>
                   </div>
                 ))}
