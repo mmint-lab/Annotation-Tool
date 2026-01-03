@@ -1339,11 +1339,22 @@ const Dashboard = () => {
                         </p>
                       )}
                       {doc.description && (<p className="text-xs text-gray-500 mt-1">{doc.description}</p>)}
+                      {doc.assigned_users && doc.assigned_users.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          <span className="font-medium">Assigned users:</span> {doc.assigned_users.map(uid => {
+                            const u = users.find(user => user.id === uid);
+                            return u ? u.full_name || u.email : uid.slice(-6);
+                          }).join(', ')}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button onClick={() => annotateDoc(doc.id)} variant="outline">Annotate</Button>
                       {user?.role === 'admin' && (
                         <>
+                          <Button variant="outline" size="sm" onClick={() => { setSelectedDocForAssignment(doc); setSelectedUserIds(doc.assigned_users || []); setAssignUsersModalOpen(true); }}>
+                            <User className="h-4 w-4 mr-1" /> Assign Users
+                          </Button>
                           <Button variant="secondary" size="sm" onClick={() => downloadAnnotatedCsvInline(doc)}><Download className="h-4 w-4 mr-1" /> Download annotated CSV</Button>
                           <Button variant="outline" size="sm" onClick={async () => { try { const url = `${API}/admin/download/annotated-paragraphs/${doc.id}`; const token = localStorage.getItem('token'); let res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } }); if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`); const blob = await res.blob(); const a = document.createElement('a'); const u = window.URL.createObjectURL(blob); a.href = u; a.setAttribute('download', `annotated_paragraphs_${doc.filename || 'document'}.csv`); document.body.appendChild(a); a.click(); document.body.removeChild(a); window.URL.revokeObjectURL(u); showToast('Paragraphs CSV generated', 'success'); } catch (e) { showToast('Error downloading annotated paragraphs: ' + (e.message || 'Please try again.'), 'error'); } }}><Download className="h-4 w-4 mr-1" /> Download annotated paragraphs</Button>
                           <Button variant="outline" size="sm" onClick={() => openManageAnnotations(doc)}>Manage Annotations</Button>
