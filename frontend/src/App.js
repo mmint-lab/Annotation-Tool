@@ -516,6 +516,10 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
   const deleteSelectedAnns = () => { if (selectedAnnIds.length) onBulkDeleteAnnotations(selectedAnnIds, currentSentence.id); };
 
   const isSelectedTag = (domain, category, tag) => selectedTags.some(t => t.domain === domain && t.category === category && t.tag === tag);
+  const getTagValence = (domain, category, tag) => {
+    const found = selectedTags.find(t => t.domain === domain && t.category === category && t.tag === tag);
+    return found ? found.valence : null;
+  };
 
   const progress = ((currentIndex + 1) / sentences.length) * 100;
 
