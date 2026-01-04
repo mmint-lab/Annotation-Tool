@@ -577,6 +577,54 @@ frontend:
         agent: "testing"
         comment: "✅ PASSED - Project label removal successful. Verified that document cards in Documents tab do NOT show any 'project_name' or 'Default Project' badges/labels. Only user assignment badges are visible (e.g., 'Assigned users: Rachel Polcyn, Analytics Test User'). Tested 4 document cards and confirmed no project-related labels found. The deprecated project concept has been successfully removed from the UI."
 
+  - task: "Resources Tab Clear Filters Button"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "TESTED - Resources tab functionality verified. Found search field 'Search by name' and 2 filter dropdowns working correctly. Apply button functional. Clear Filters button implementation needs verification - may appear dynamically after filters are applied but was not consistently visible during testing. Search and filter core functionality is working properly."
+
+  - task: "Admin Page Category Counts Section"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Category Counts by Domain section fully functional. Found 'Total Tags per Domain' summary chart. Verified expandable/collapsible domain sections with buttons for Economic Stability, Social and Community Context, Education, Food, Transportation, and Health domains. Clicking domain buttons successfully expands sections and shows detailed charts. All requirements from review request met."
+
+  - task: "Admin Page Per-User Document Progress"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Per-User Document Progress section fully functional. Found section showing documents (test_discharge_summaries.csv, annotation_test_df.csv, df_set.csv, ten_item_test.csv) with stacked progress bars per user. Each bar shows user names (admin, Rachel Polcyn, Analytics Test User) and percentage completion. Progress bars display correctly with visual indicators showing annotation completion status per user per document."
+
+  - task: "Admin Page User Activity Log"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - User Activity Log section fully functional. Found section with user selection dropdown showing 'All Users' with multiple user options available. Download Activity Log button present and functional - clicking initiates download successfully. Dropdown allows filtering activities by specific users. All requirements from review request met."
+
 
 metadata:
   created_by: "main_agent"
