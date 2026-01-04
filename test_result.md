@@ -522,8 +522,6 @@ test_plan:
   current_focus:
     - "Per-User CSV Export Endpoint - verify timestamp column, per-tag confidence, skipped=TRUE"
     - "Per-User Paragraph Export Endpoint - verify timestamp, skipped markers, per-tag confidence in format"
-    - "Document Completion Indicator in Annotation Interface"
-    - "Remove Default Project Label from Document Cards"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
