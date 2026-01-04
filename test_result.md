@@ -457,6 +457,21 @@ frontend:
         agent: "testing"
         comment: "✅ PASSED - Admin download for selected user functionality working perfectly. 'Download for selected user' button found in Manage Annotations modal. Button correctly disabled when 'All' is selected, enabled when specific user selected. Download successful with correct filename format: 'Rachel Polcyn_annotations_test_discharge_summaries.csv.csv'. All filter dropdowns functional. Admin role-based access working correctly."
 
+  - task: "Account Page Profile and Password Update with Toast Notifications"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "New testing request for Account page profile and password update functionality with toast notifications"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Account page functionality fully working. Profile update: name changes save successfully and reflect in header, success toast appears with green background. Password change: form validation working, mismatch errors show red toast, all three password fields functional. Toast system: proper positioning (top-right), correct styling (green for success, red for error), auto-dismiss after 3 seconds. Navigation: accessible via username click in header. Backend integration: API calls working correctly for both profile and password updates. All test requirements from review request successfully completed."
+
 
 metadata:
   created_by: "main_agent"
