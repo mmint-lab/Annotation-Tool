@@ -996,6 +996,60 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Add User Dialog */}
+      <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>Create a new user account</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input 
+                type="email" 
+                value={newUser.email} 
+                onChange={(e) => setNewUser({...newUser, email: e.target.value})} 
+                placeholder="user@example.com" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Full Name</Label>
+              <Input 
+                value={newUser.full_name} 
+                onChange={(e) => setNewUser({...newUser, full_name: e.target.value})} 
+                placeholder="John Doe" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Password</Label>
+              <Input 
+                type="password" 
+                value={newUser.password} 
+                onChange={(e) => setNewUser({...newUser, password: e.target.value})} 
+                placeholder="Enter password" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={newUser.role} onValueChange={(value) => setNewUser({...newUser, role: value})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="annotator">Annotator</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => setShowCreateUser(false)} disabled={loading}>Cancel</Button>
+              <Button onClick={createUser} disabled={loading}>{loading ? 'Creating...' : 'Create User'}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
