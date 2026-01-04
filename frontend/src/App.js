@@ -1669,8 +1669,14 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <Input placeholder="Search by name" value={resourcesQuery} onChange={(e)=>setResourcesQuery(e.target.value)} className="w-48" />
-                <Select value={resourcesKind} onValueChange={setResourcesKind}>
+                <Input 
+                  placeholder="Search by name" 
+                  value={resourcesQuery} 
+                  onChange={(e) => setResourcesQuery(e.target.value)} 
+                  onKeyDown={(e) => { if (e.key === 'Enter') fetchResources(1); }}
+                  className="w-48" 
+                />
+                <Select value={resourcesKind} onValueChange={(val) => { setResourcesKind(val); fetchResources(1, { kind: val }); }}>
                   <SelectTrigger className="w-40"><SelectValue placeholder="Kind" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
@@ -1678,7 +1684,7 @@ const Dashboard = () => {
                     <SelectItem value="link">Links</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={resourcesMime} onValueChange={setResourcesMime}>
+                <Select value={resourcesMime} onValueChange={(val) => { setResourcesMime(val); fetchResources(1, { mime: val }); }}>
                   <SelectTrigger className="w-40"><SelectValue placeholder="Type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
@@ -1688,7 +1694,7 @@ const Dashboard = () => {
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={() => fetchResources(1)}>Search</Button>
-                {(resourcesQuery || resourcesKind !== 'all' || resourcesMime !== 'all') && (
+                {resourcesFiltered && (
                   <Button 
                     variant="ghost" 
                     size="sm"
