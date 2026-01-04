@@ -818,7 +818,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                                 className={`w-4 h-4 rounded-full border-2 transition-all hover:scale-125 ${
                                   (tag.confidence || 3) === level 
                                     ? 'bg-blue-600 border-blue-600' 
-                                    : 'bg-white border-gray-400 hover:border-blue-500'
+                                    : 'bg-card border-border hover:border-primary'
                                 }`}
                                 title={`Set confidence to ${level}`}
                               />
