@@ -319,6 +319,66 @@ backend:
         agent: "testing"
         comment: "✅ DETAILED INVESTIGATION COMPLETED - Conducted comprehensive investigation of user report about missing tagged annotations in paragraph exports. FINDINGS: 1) Admin login successful (admin@sdoh.com / admin123) ✓, 2) Found test_discharge_summaries.csv document with 17 sentences and 10 annotations (7 tagged, 3 skipped) ✓, 3) Existing tagged annotations have proper structure with domains, categories, tags, and valence ✓, 4) Admin paragraph export (/api/admin/download/annotated-paragraphs/{document_id}) shows tags correctly formatted as '[Tags: Domain:Category:Tag(+/-)@UserName]' ✓, 5) Created fresh annotation with 2 tags (Economic Stability:Employment:Unemployed(-) and Social and Community Context:Social Cohesion:Social Isolation(-)) ✓, 6) Fresh annotation immediately appeared in paragraph export with correct formatting ✓, 7) User-specific export (/api/download/my-annotated-paragraphs/{document_id}) also working correctly ✓. CONCLUSION: Paragraph export functionality is working as designed. Tags appear correctly in annotated_paragraph_text column. The format_sentence_tags function properly excludes skipped annotations (by design). User issue likely due to testing with documents containing only skipped annotations, which is expected behavior since skipped annotations are intentionally excluded from paragraph reconstruction."
 
+  - task: "Domain Tag Stats Analytics Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/analytics/domain-tag-stats endpoint working correctly. Returns proper structure with all required fields: domain_totals (object with tag count per domain), tag_details (nested object with per-tag counts organized by domain→category→tag), and domains (array with SDOH domain names). Verified 4 domains with tag data, proper nesting structure, and all 5 expected SDOH domains in array. Authentication properly enforced. Data structure matches requirements exactly."
+
+  - task: "Domain-specific Chart Analytics Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/analytics/domain-chart/{domain_name} endpoint working correctly. Tested with 'Economic Stability' domain and returns valid PNG image (23624 bytes) with proper content-type 'image/png'. Authentication properly required (401 without token). Chart displays tag distribution for specified domain as horizontal bar chart. Endpoint handles domain-specific filtering correctly."
+
+  - task: "All Documents User Progress Analytics Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/analytics/all-documents-user-progress endpoint working correctly. Returns array of documents with required fields: filename, total_sentences, and user_progress array. Each user_progress entry contains required fields: user_name, annotated, total, progress. Tested with 4 documents and proper per-user progress calculations. Authentication properly enforced. Data structure matches requirements exactly."
+
+  - task: "Activity Log with User Filter Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/admin/download/activity-log endpoint working correctly with optional user_id filter. Returns CSV with proper headers: timestamp, user_id, user_name, document_id, sentence_id, action_type, metadata. Tested both scenarios: 1) Without user_id returns all activities (434 rows), 2) With user_id parameter filters to specific user activities. Content-Disposition headers properly set for file download. Admin-only access properly enforced."
+
+  - task: "Resource Preview for Excel Files Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - /api/resources/{id}/preview endpoint working correctly for Excel files (.xlsx). Returns HTML table with proper content-type 'text/html'. Verified HTML structure includes table tags, rows, cells, and content. Row limit properly respected (shows first 10 rows plus header). Authentication properly required. Excel file upload and preview functionality working end-to-end. Non-Excel files properly rejected with appropriate error messages."
+
 
 frontend:
   - task: "Projects Overview analytics (stacked chart + table)"
