@@ -513,12 +513,40 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Per-User CSV Export Endpoint - verify timestamp column, per-tag confidence, skipped=TRUE"
+    - "Per-User Paragraph Export Endpoint - verify timestamp, skipped markers, per-tag confidence in format"
+    - "Document Completion Indicator in Annotation Interface"
+    - "Remove Default Project Label from Document Cards"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "main"
+    message: |
+      LATEST UPDATE (P0 Fix): Updated per-user CSV and paragraph export endpoints to include:
+      
+      1. CSV Export (/api/download/my-annotations-csv/{document_id}):
+         - Added 'timestamp' column (annotation created_at)
+         - Confidence is now extracted from per-tag data (not annotation level)
+         - is_skipped column properly shows TRUE for skipped annotations
+         - Column order: document_id, sentence_id, subject_id, row_index, sentence_index, sentence_text, tag_domain, tag_category, tag, valence, confidence, notes, is_skipped, timestamp, duration_ms
+      
+      2. Paragraph Export (/api/download/my-annotated-paragraphs/{document_id}):
+         - Tags now include timestamp: [Tags: Domain:Category:Tag(valence,conf=X)@User@Timestamp]
+         - Skipped annotations now appear as [SKIPPED@User@Timestamp] instead of being hidden
+         - Per-tag confidence included in tag format
+      
+      3. Frontend Changes:
+         - Added completion indicator (green "Complete" badge) in annotation interface when all sentences annotated
+         - Progress bar now shows "Annotated: X/Y" count instead of just viewing position
+         - Removed deprecated project_name badge from document cards in Documents tab
+      
+      Please test:
+      1. Backend: Both CSV export endpoints with documents containing tagged AND skipped annotations
+      2. Frontend: Annotation interface completion indicator (need document with ALL sentences annotated)
+      3. Frontend: Documents tab should NOT show project name badges on document cards
   - agent: "main"
     message: |
       Implemented Projects Overview stacked chart endpoint (/api/analytics/projects-chart) and wired it in Admin -> Analytics. Added Subject filter to Manage Annotations modal (client-side unique subjects from doc annotations). Updated test plan focus and requested backend+frontend retesting.
