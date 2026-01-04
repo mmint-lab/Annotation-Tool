@@ -1991,21 +1991,25 @@ const Dashboard = () => {
             <div className="space-y-3">
               <Label>Select Users</Label>
               <div className="max-h-64 overflow-y-auto border rounded p-2 space-y-2">
-                {users.filter(u => u.role === 'annotator').map((u) => (
-                  <div key={u.id} className="flex items-center space-x-2">
-                    <Checkbox 
-                      checked={selectedUserIds.includes(u.id)} 
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedUserIds(prev => [...prev, u.id]);
-                        } else {
-                          setSelectedUserIds(prev => prev.filter(id => id !== u.id));
-                        }
-                      }} 
-                    />
-                    <Label className="cursor-pointer">{u.full_name || u.email}</Label>
-                  </div>
-                ))}
+                {users.filter(u => u.role !== 'admin').length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No annotators available to assign.</p>
+                ) : (
+                  users.filter(u => u.role !== 'admin').map((u) => (
+                    <div key={u.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        checked={selectedUserIds.includes(u.id)} 
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedUserIds(prev => [...prev, u.id]);
+                          } else {
+                            setSelectedUserIds(prev => prev.filter(id => id !== u.id));
+                          }
+                        }} 
+                      />
+                      <Label className="cursor-pointer">{u.full_name || u.email}</Label>
+                    </div>
+                  ))
+                )}
               </div>
               <div className="flex items-center gap-2 justify-end pt-2">
                 <Button variant="outline" onClick={() => { setAssignUsersModalOpen(false); setSelectedDocForAssignment(null); setSelectedUserIds([]); }}>Cancel</Button>
