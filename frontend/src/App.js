@@ -859,7 +859,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                           const isNegative = valence === 'negative';
                           const baseClasses = isPositive ? 'bg-green-600 text-white hover:bg-green-700 border-green-600' : 
                                              isNegative ? 'bg-red-600 text-white hover:bg-red-700 border-red-600' : 
-                                             'bg-white text-gray-700 hover:bg-gray-50 border-gray-300';
+                                             'bg-card text-foreground hover:bg-muted border-border';
                           return (
                             <div key={tag} className={`inline-flex rounded border ${baseClasses}`}>
                               <Button 
