@@ -253,7 +253,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -264,6 +264,9 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "UPDATED: Added timestamp column for annotation creation time, reordered columns to: document_id, sentence_id, subject_id, row_index, sentence_index, sentence_text, tag_domain, tag_category, tag, valence, confidence (per-tag), notes, is_skipped, timestamp, duration_ms. Confidence now extracted from per-tag data, skipped=TRUE for skipped annotations."
+      - working: true
+        agent: "main"
+        comment: "✅ VERIFIED via curl - CSV export now includes timestamp column, per-tag confidence, and is_skipped=True for skipped annotations. All columns present and properly ordered."
 
   - task: "Per-User Paragraph Export Endpoint"
     implemented: true
@@ -271,7 +274,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -282,6 +285,9 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "UPDATED: Added timestamp to paragraph export, skipped annotations now show as [SKIPPED@user@timestamp], per-tag confidence included in tag format as (valence,conf=X)@user@timestamp"
+      - working: true
+        agent: "main"
+        comment: "✅ VERIFIED via curl - Paragraph export now includes: 1) [SKIPPED@user@timestamp] markers for skipped annotations instead of hiding them, 2) Per-tag confidence in format: (+,conf=3)@user@timestamp, 3) Full timestamps on all annotations"
 
   - task: "Admin CSV Export with Confidence and Duration"
     implemented: true
