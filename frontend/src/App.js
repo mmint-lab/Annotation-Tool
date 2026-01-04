@@ -855,10 +855,16 @@ const AdminManagementPanel = ({ notify = (msg) => window.alert(msg) }) => {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectAllUsers, setSelectAllUsers] = useState(false);
   const [toast, setToast] = useState(null);
+  const [confirmState, setConfirmState] = useState({ open: false, message: '', resolve: null });
+  
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 1600);
   };
+  
+  const confirmAction = (message) => new Promise((resolve) => { 
+    setConfirmState({ open: true, message, resolve }); 
+  });
 
   const fetchUsers = async () => {
     try {
