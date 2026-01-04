@@ -727,13 +727,13 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                     } catch (e) { showToast('Error removing tag: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
                   };
                   return (
-                    <div key={annotation.id} className="p-3 bg-blue-50 rounded-md">
+                    <div key={annotation.id} className="p-3 bg-muted/50 border rounded-md">
                       {annotation.skipped ? (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <Checkbox checked={selectedAnnIds.includes(annotation.id)} onCheckedChange={() => toggleAnn(annotation.id)} />
-                            <SkipForward className="h-4 w-4 text-orange-600" />
-                            <span className="text-sm text.gray-600">Skipped by User {annotation.user_id.slice(-6)}</span>
+                            <SkipForward className="h-4 w-4 text-orange-500" />
+                            <span className="text-sm text-muted-foreground">Skipped by User {annotation.user_id.slice(-6)}</span>
                           </div>
                           {canDelete && (
                             <button type="button" onClick={() => onDeleteAnnotation(annotation.id, currentSentence.id)} className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent">
@@ -756,7 +756,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                           </div>
                           <div className="flex flex-wrap gap-1 mb-2">
                             {(annotation.tags || []).map((tag, tagIdx) => (
-                              <span key={tagIdx} className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border ${tag.valence === 'positive' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300'}`}>
+                              <span key={tagIdx} className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border ${tag.valence === 'positive' ? 'bg-green-600/20 text-green-600 dark:text-green-400 border-green-600/30' : 'bg-red-600/20 text-red-600 dark:text-red-400 border-red-600/30'}`}>
                                 {tag.domain}: {tag.tag} ({tag.valence})
                                 {canDelete && (
                                   <button type="button" className="ml-1 opacity-70 hover:opacity-100" onClick={() => deleteOneTag(annotation.id, tag)} title="Remove this tag">×</button>
