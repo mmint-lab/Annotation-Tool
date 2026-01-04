@@ -705,7 +705,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-muted rounded-lg">
             <p className="text-lg leading-relaxed">{currentSentence.text}</p>
           </div>
 
