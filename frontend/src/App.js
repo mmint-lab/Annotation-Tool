@@ -793,8 +793,8 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                         </span>
                         <span className="text-sm font-medium text-foreground">{tag.domain}: {tag.category} - {tag.tag}</span>
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => removeTag(index)} className="h-8 w-8 p-0 hover:bg-gray-100" title="Remove tag">
-                        <X className="h-4 w-4 text-gray-600" />
+                      <Button size="sm" variant="ghost" onClick={() => removeTag(index)} className="h-8 w-8 p-0 hover:bg-muted" title="Remove tag">
+                        <X className="h-4 w-4 text-muted-foreground" />
                       </Button>
                     </div>
                     <div className="space-y-1 pl-2">
