@@ -1597,14 +1597,14 @@ const Dashboard = () => {
             <CardTitle>Documents ({documents.length})</CardTitle>
 
             {user?.role === 'admin' && (
-              <div className="flex items-center gap-2 p-2 bg-gray-50 border rounded">
+              <div className="flex items-center gap-2 p-2 bg-muted border rounded">
                 <div className="flex items-center gap-2 mr-2">
                   <Checkbox id="selectAllDocs" checked={selectAllDocs} onCheckedChange={() => { if (selectAllDocs) { setSelectedDocIds([]); setSelectAllDocs(false); } else { setSelectedDocIds(documents.map(d => d.id)); setSelectAllDocs(true); } }} />
-                  <Label htmlFor="selectAllDocs">Select all</Label>
+                  <Label htmlFor="selectAllDocs" className="text-foreground">Select all</Label>
                   <Button variant="outline" size="sm" onClick={() => { setSelectedDocIds([]); setSelectAllDocs(false); }}>Deselect all</Button>
                 </div>
                 <div className="flex items-center gap-2 pl-4 ml-4 border-l">
-                  <input id="csvUploadInput" type="file" accept=".csv" onChange={(e) => { const f = e.target.files?.[0]; setUploadFile(f || null); }} />
+                  <input id="csvUploadInput" type="file" accept=".csv" onChange={(e) => { const f = e.target.files?.[0]; setUploadFile(f || null); }} className="text-foreground" />
                   <Button variant="secondary" size="sm" disabled={!uploadFile} onClick={async () => { if (!uploadFile) return; const form = new FormData(); form.append('file', uploadFile); try { await axios.post(`${API}/documents/upload`, form, { headers: { 'Content-Type': 'multipart/form-data' } }); setUploadFile(null); fetchDocuments(); fetchAnalytics(); showToast('CSV uploaded', 'success'); } catch (err) { showToast('Error uploading CSV: ' + (err.response?.data?.detail || err.message || 'Please try again.'), 'error'); } finally { const el = document.getElementById('csvUploadInput'); if (el) el.value = ''; } }}>Upload CSV</Button>
                 </div>
                 <Button variant="destructive" size="sm" onClick={async () => { if (!selectedDocIds.length) return; const ok = await confirmAction(`Delete ${selectedDocIds.length} documents?`); if (!ok) return; try { await axios.post(`${API}/admin/documents/bulk-delete`, { ids: selectedDocIds }); setDocuments(prev => prev.filter(d => !selectedDocIds.includes(d.id))); setSelectedDocIds([]); setSelectAllDocs(false); fetchAnalytics(); showToast('Documents deleted', 'success'); } catch (e) { showToast('Error bulk-deleting documents: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); } }} disabled={!selectedDocIds.length}>Delete selected</Button>
