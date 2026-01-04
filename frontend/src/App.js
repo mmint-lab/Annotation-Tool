@@ -1346,8 +1346,45 @@ const Dashboard = () => {
                   <Card><CardContent className="p-4"><div className="text-sm text-gray-600">Sentences</div><div className="text-2xl font-semibold">{analytics.total_sentences || 0}</div></CardContent></Card>
                   <Card><CardContent className="p-4"><div className="text-sm text-gray-600">Annotations</div><div className="text-2xl font-semibold">{analytics.total_annotations || 0}</div></CardContent></Card>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <Card><CardHeader><CardTitle>Category Counts</CardTitle></CardHeader><CardContent><img src={`${API}/analytics/tag-prevalence-chart?token=${encodeURIComponent(localStorage.getItem('token')||'')}`} alt="Category Counts Chart" className="w-full rounded border" /></CardContent></Card>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Category Counts by Domain</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                {/* Domain Summary Chart */}
+                <div>
+                  <h4 className="font-medium mb-2">Total Tags per Domain</h4>
+                  <img src={`${API}/analytics/tag-prevalence-chart?token=${encodeURIComponent(localStorage.getItem('token')||'')}`} alt="Domain Summary Chart" className="w-full max-w-3xl rounded border" />
+                </div>
+                
+                {/* Expandable Per-Domain Charts */}
+                <div className="space-y-2">
+                  <h4 className="font-medium">Tag Distribution by Domain</h4>
+                  <p className="text-sm text-gray-500 mb-3">Click on a domain to expand and see individual tag counts</p>
+                  {domainTagStats?.domains?.map((domain, idx) => (
+                    <div key={domain} className="border rounded-lg">
+                      <button 
+                        className="w-full p-3 flex items-center justify-between text-left hover:bg-gray-50 rounded-lg"
+                        onClick={() => setExpandedDomains(prev => ({...prev, [domain]: !prev[domain]}))}
+                      >
+                        <span className="font-medium">{domain}</span>
+                        <div className="flex items-center gap-3">
+                          <Badge variant="secondary">{domainTagStats?.domain_totals?.[domain] || 0} tags</Badge>
+                          <span className="text-gray-400">{expandedDomains[domain] ? '▼' : '▶'}</span>
+                        </div>
+                      </button>
+                      {expandedDomains[domain] && (
+                        <div className="p-3 pt-0 border-t bg-gray-50">
+                          <img 
+                            src={`${API}/analytics/domain-chart/${encodeURIComponent(domain)}?token=${encodeURIComponent(localStorage.getItem('token')||'')}`} 
+                            alt={`${domain} Tags Chart`} 
+                            className="w-full max-w-2xl rounded border bg-white"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
