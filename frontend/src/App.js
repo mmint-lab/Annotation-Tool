@@ -393,7 +393,7 @@ const ActiveDocsPanel = ({ onOpenDoc }) => {
                     <div className="text-xs text-muted-foreground">{it.annotated_count}/{it.total_sentences} sentences</div>
                   </div>
                   <div className="w-64">
-                    <div className="h-2 bg-gray-200 rounded"><div className="h-2 bg-blue-600 rounded" style={{ width: `${Math.round(it.progress*100)}%` }}></div></div>
+                    <div className="h-2 bg-muted rounded"><div className="h-2 bg-blue-600 rounded" style={{ width: `${Math.round(it.progress*100)}%` }}></div></div>
                   </div>
                   <div className="flex items-center gap-2">
                     {typeof it.last_annotation_index === 'number' && (
