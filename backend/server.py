@@ -374,10 +374,21 @@ async def upload_document(
     reader = csv.DictReader(io.StringIO(csv_content))
 
     def pick_text(row: Dict[str, Any]) -> str:
-        # Try common text columns; if none, try to join any long string fields
+        # First check for specific medical record columns
+        text_parts = []
+        if 'HISTORY OF PRESENT ILLNESS' in row and isinstance(row['HISTORY OF PRESENT ILLNESS'], str) and row['HISTORY OF PRESENT ILLNESS'].strip():
+            text_parts.append(row['HISTORY OF PRESENT ILLNESS'].strip())
+        if 'SOCIAL HISTORY' in row and isinstance(row['SOCIAL HISTORY'], str) and row['SOCIAL HISTORY'].strip():
+            text_parts.append(row['SOCIAL HISTORY'].strip())
+        
+        if text_parts:
+            return ' '.join(text_parts)
+        
+        # Try common text columns as fallback
         for key in ['discharge_summary','text','note','notes','summary','content','sentence']:
             if key in row and isinstance(row[key], str) and row[key].strip():
                 return row[key].strip()
+        
         # fallback: join fields that look like text
         acc = []
         for k, v in row.items():
@@ -386,7 +397,11 @@ async def upload_document(
         return ' '.join(acc)
 
     def pick_subject(row: Dict[str, Any], idx: int) -> str:
-        for key in ['subject_id','patient_id','note_id','encounter_id','index','id']:
+        # Prioritize note_id for medical records
+        if 'note_id' in row and str(row['note_id']).strip():
+            return str(row['note_id']).strip()
+        # Then try other common ID columns
+        for key in ['subject_id','patient_id','encounter_id','index','id']:
             if key in row and str(row[key]).strip():
                 return str(row[key]).strip()
         return str(idx)
