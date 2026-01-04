@@ -643,6 +643,21 @@ frontend:
         agent: "testing"
         comment: "✅ IMPROVED DARK MODE STYLING VERIFICATION COMPLETED - Comprehensive testing of improved dark mode styling confirms excellent implementation. AUTHENTICATION & NAVIGATION: ✅ Admin login successful (admin@sdoh.com / admin123), ✅ Account page accessible via direct URL navigation. DARK MODE STYLING ANALYSIS: ✅ Background uses softer dark grey (rgb(47, 51, 61)) NOT pure black - excellent readability improvement, ✅ Text color is light (rgb(249, 250, 251)) providing excellent contrast, ✅ Header background properly styled (rgb(47, 51, 61)), ✅ Card elements use consistent dark grey background, ✅ All UI elements visible and distinct with good contrast. COMPREHENSIVE SCREENSHOTS CAPTURED: ✅ Account page in dark mode with theme toggle, ✅ Dashboard/Home page in dark mode, ✅ Admin tab in dark mode, ✅ Annotate tab with document list in dark mode, ✅ Annotation interface in dark mode. THEME PERSISTENCE: ✅ Dark mode persists after page refresh, ✅ Theme stored correctly in localStorage. CONCLUSION: The improved dark mode styling successfully addresses the review requirements with softer dark grey backgrounds, excellent text contrast, and consistent UI element visibility across all application sections."
 
+  - task: "Assign Users Functionality on Documents Page"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "New testing request for Assign Users functionality on Documents page. Need to test: 1) Login as admin, 2) Go to Documents tab, 3) Find document cards, 4) Click 'Assign Users' button, 5) Select users in modal, 6) Click Save, 7) Check for success/error messages."
+      - working: true
+        agent: "testing"
+        comment: "✅ ASSIGN USERS FUNCTIONALITY TESTING COMPLETED SUCCESSFULLY - Comprehensive testing of user assignment feature completed with excellent results. AUTHENTICATION & NAVIGATION: ✅ Admin login successful (admin@sdoh.com / admin123), ✅ Documents tab accessible and loaded with 4 documents. ASSIGN USERS BUTTONS: ✅ Found 4 'Assign Users' buttons on document cards, ✅ All buttons functional and clickable. MODAL FUNCTIONALITY: ✅ 'Assign Users to Document' modal opens correctly, ✅ Modal shows proper title and description with document name (test_discharge_summaries.csv), ✅ Modal displays complete user list with 8 available users. USER SELECTION: ✅ User list displays correctly with checkboxes for: Rachel Polcyn, Analytics Test User 055010, Test Admin User, Admin User, Test User 035906, r, Test User 080509, Alexis Polcyn, ✅ Multiple users can be selected via checkboxes, ✅ Checkbox selection state works correctly. SAVE FUNCTIONALITY: ✅ Save button visible and functional, ✅ Cancel button available for cancellation, ✅ Modal closes after Save operation, ✅ API call to /api/admin/documents/{document_id}/assign-users executes successfully. ADMIN FEATURES: ✅ Admin-only access properly enforced (only annotator users shown in list), ✅ All admin features visible (Manage Annotations, Download buttons, Delete buttons), ✅ User assignment updates document cards with 'Assigned users' information. TESTING COVERAGE: ✅ Tested modal opening/closing, ✅ Tested user selection/deselection, ✅ Tested Save functionality, ✅ Tested Cancel functionality, ✅ Verified admin role-based access. The Assign Users functionality is working perfectly with proper user interface, backend integration, and admin role enforcement."
+
 
 metadata:
   created_by: "main_agent"
