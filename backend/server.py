@@ -1067,21 +1067,23 @@ async def download_my_annotations_csv(document_id: str, current_user: User = Dep
     
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["document_id","sentence_id","subject_id","row_index","sentence_index","sentence_text","tag_domain","tag_category","tag","valence","notes","is_skipped","confidence","duration_ms"]) 
+    # Added timestamp column for annotation creation time; confidence is now per-tag
+    writer.writerow(["document_id","sentence_id","subject_id","row_index","sentence_index","sentence_text","tag_domain","tag_category","tag","valence","confidence","notes","is_skipped","timestamp","duration_ms"]) 
     
     # For each sentence, get only current user's annotations
     for sid, s in sentence_map.items():
         anns = await db.annotations.find({"sentence_id": sid, "user_id": current_user.id}, {"_id": 0}).to_list(1000)
         if not anns:
             # No annotation by this user for this sentence - empty row
-            writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","","", False,"",""])
+            writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","","","", False,"",""])
             continue
         
         for a in anns:
-            confidence = a.get("confidence", "")
             duration_ms = a.get("duration_ms", "")
+            timestamp = a.get("created_at", "")
             if a.get("skipped"):
-                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","", a.get("notes",""), True, confidence, duration_ms])
+                # Skipped annotation - no tags, mark as skipped=TRUE
+                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","","", a.get("notes",""), True, timestamp, duration_ms])
                 continue
             
             tags = a.get("tags", [])
@@ -1091,9 +1093,11 @@ async def download_my_annotations_csv(document_id: str, current_user: User = Dep
                     category = t.get("category") if isinstance(t, dict) else getattr(t, "category", "")
                     tag = t.get("tag") if isinstance(t, dict) else getattr(t, "tag", "")
                     valence = t.get("valence") if isinstance(t, dict) else getattr(t, "valence", "")
-                    writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), domain, category, tag, valence, a.get("notes",""), False, confidence, duration_ms])
+                    # Per-tag confidence (1-5 scale)
+                    tag_confidence = t.get("confidence") if isinstance(t, dict) else getattr(t, "confidence", "")
+                    writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), domain, category, tag, valence, tag_confidence, a.get("notes",""), False, timestamp, duration_ms])
             else:
-                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","", a.get("notes",""), False, confidence, duration_ms])
+                writer.writerow([document_id, sid, s.get("subject_id",""), s.get("row_index",""), s.get("sentence_index",""), s.get("text",""), "","","","","", a.get("notes",""), False, timestamp, duration_ms])
     
     output.seek(0)
     filename = f"my_annotations_{current_user.email.split('@')[0]}_{document.get('filename', 'export')}.csv"
@@ -1122,11 +1126,15 @@ async def download_my_annotated_paragraphs(document_id: str, current_user: User 
     # User display name
     user_display = current_user.full_name or current_user.email or current_user.id
     
-    # Helper: format tags for a sentence (exclude skipped)
+    # Helper: format tags for a sentence (include skipped marker, timestamp, and per-tag confidence)
     def format_sentence_tags(sent_id: str) -> str:
         arr = []
+        skipped_timestamps = []
         for a in by_sid.get(sent_id, []):
+            timestamp = a.get('created_at', '')
             if a.get('skipped'):
+                # Record skipped annotation with timestamp
+                skipped_timestamps.append(timestamp)
                 continue
             tags = a.get('tags', [])
             if isinstance(tags, list):
@@ -1136,18 +1144,31 @@ async def download_my_annotated_paragraphs(document_id: str, current_user: User 
                         category = (t.get('category') or '').strip()
                         tag = (t.get('tag') or '').strip()
                         val = (t.get('valence') or '').strip().lower()
+                        conf = t.get('confidence', '')
                     else:
                         domain = (getattr(t, 'domain', '') or '').strip()
                         category = (getattr(t, 'category', '') or '').strip()
                         tag = (getattr(t, 'tag', '') or '').strip()
                         val = (getattr(t, 'valence', '') or '').strip().lower()
+                        conf = getattr(t, 'confidence', '')
                     if not domain or not tag:
                         continue
                     sign = '+' if val == 'positive' else '-'
-                    arr.append(f"{domain}:{category}:{tag}({sign})@{user_display}")
-        if not arr:
+                    # Include per-tag confidence in format: Domain:Category:Tag(+/-,conf=X)@User@Timestamp
+                    conf_str = f",conf={conf}" if conf else ""
+                    arr.append(f"{domain}:{category}:{tag}({sign}{conf_str})@{user_display}@{timestamp}")
+        
+        result_parts = []
+        if arr:
+            result_parts.append(f"[Tags: {', '.join(arr)}]")
+        if skipped_timestamps:
+            # Show skipped annotations with their timestamps
+            for ts in skipped_timestamps:
+                result_parts.append(f"[SKIPPED@{user_display}@{ts}]")
+        
+        if not result_parts:
             return ''
-        return f" [Tags: {', '.join(arr)}]"
+        return ' ' + ' '.join(result_parts)
     
     # Group sentences back to paragraphs per row_index
     para_map: Dict[int, Dict[str, Any]] = {}
