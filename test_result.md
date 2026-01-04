@@ -483,27 +483,33 @@ frontend:
 
   - task: "Document Completion Indicator in Annotation Interface"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added visual completion indicator that appears when all sentences in a document are annotated by the current user. Progress bar now shows 'Annotated: X/Y' count, and a green 'Complete' badge with checkmark appears when 100% annotated."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Document completion indicator fully functional. Found 'Annotated: X/Y' count indicator showing current progress (e.g., 'Annotated: 5/17', 'Annotated: 134/134'). Found 'Viewing: X/Y' indicator showing current sentence position (e.g., 'Viewing: 1/17'). Successfully verified green 'Complete' badge with checkmark icon appears when document is 100% annotated (seen on ten_item_test.csv with 134/134 sentences annotated). Progress bar displays correctly with proper visual feedback. All requirements from review request successfully completed."
 
   - task: "Remove Default Project Label from Document Cards"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Removed the deprecated 'project_name' badge display from document cards in the Documents tab. The user assignment feature replaced the default project concept."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Project label removal successful. Verified that document cards in Documents tab do NOT show any 'project_name' or 'Default Project' badges/labels. Only user assignment badges are visible (e.g., 'Assigned users: Rachel Polcyn, Analytics Test User'). Tested 4 document cards and confirmed no project-related labels found. The deprecated project concept has been successfully removed from the UI."
 
 
 metadata:
