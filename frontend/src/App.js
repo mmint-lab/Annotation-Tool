@@ -1169,12 +1169,15 @@ const Dashboard = () => {
   const [resourcesKind, setResourcesKind] = useState("all");
   const [resourcesMime, setResourcesMime] = useState("all");
 
-  const fetchResources = async (page = resourcesPage) => {
+  const fetchResources = async (page = resourcesPage, overrides = {}) => {
     try {
       const params = { page, page_size: 20 };
-      if (resourcesQuery) params.q = resourcesQuery;
-      if (resourcesKind !== 'all') params.kind = resourcesKind;
-      if (resourcesMime !== 'all') params.mime = resourcesMime;
+      const query = overrides.query !== undefined ? overrides.query : resourcesQuery;
+      const kind = overrides.kind !== undefined ? overrides.kind : resourcesKind;
+      const mime = overrides.mime !== undefined ? overrides.mime : resourcesMime;
+      if (query) params.q = query;
+      if (kind !== 'all') params.kind = kind;
+      if (mime !== 'all') params.mime = mime;
       const res = await axios.get(`${API}/resources`, { params });
       setResources(res.data?.items || []);
       setResourcesTotal(res.data?.total || 0);
