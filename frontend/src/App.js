@@ -257,7 +257,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <button type="button" onClick={() => navigate("/home")} className="flex items-center space-x-3 hover:opacity-80">
             <FileText className="h-8 w-8 text-blue-600" />
-            <h1 className="text-xl font-semibold text-gray-900">SDOH Annotation Tool</h1>
+            <h1 className="text-xl font-semibold text-foreground">SDOH Annotation Tool</h1>
           </button>
           {user && (
             <div className="flex items-center space-x-4">
