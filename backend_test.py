@@ -802,6 +802,323 @@ class SDOHAPITester:
         self.token = original_token
         return True
 
+    def create_test_docx_file(self):
+        """Create a test .docx file for preview testing"""
+        try:
+            from docx import Document
+            
+            # Create a new document
+            doc = Document()
+            doc.add_heading('Test Document for Preview', 0)
+            
+            p = doc.add_paragraph('This is a test document created for testing the Word document preview functionality.')
+            p.add_run(' This text should appear in the HTML preview.').bold = True
+            
+            doc.add_heading('Section 1', level=1)
+            doc.add_paragraph('This is the first section with some content.')
+            
+            doc.add_heading('Section 2', level=2)
+            doc.add_paragraph('This is the second section with more content.')
+            
+            # Add a table
+            table = doc.add_table(rows=2, cols=2)
+            table.cell(0, 0).text = 'Header 1'
+            table.cell(0, 1).text = 'Header 2'
+            table.cell(1, 0).text = 'Data 1'
+            table.cell(1, 1).text = 'Data 2'
+            
+            # Save to BytesIO
+            buffer = io.BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+            return buffer.getvalue()
+        except ImportError:
+            # If python-docx is not available, create a minimal docx-like file
+            # This is a very basic docx structure
+            docx_content = b'PK\x03\x04\x14\x00\x00\x00\x08\x00\x00\x00!\x00'
+            return docx_content
+
+    def create_test_pdf_file(self):
+        """Create a simple test PDF file"""
+        # Minimal PDF content for testing
+        pdf_content = b"""%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+
+4 0 obj
+<<
+/Length 44
+>>
+stream
+BT
+/F1 12 Tf
+72 720 Td
+(Test PDF) Tj
+ET
+endstream
+endobj
+
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000204 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+>>
+startxref
+297
+%%EOF"""
+        return pdf_content
+
+    def test_admin_upload_word_document(self):
+        """Test admin uploading a Word document for preview testing"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Create test .docx file
+        docx_content = self.create_test_docx_file()
+        
+        files = {
+            'file': ('test_document.docx', docx_content, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        }
+        
+        success, response = self.run_test(
+            "Admin - Upload Word Document",
+            "POST",
+            "admin/resources/upload",
+            200,
+            files=files
+        )
+        
+        if success and 'id' in response:
+            self.test_word_resource_id = response['id']
+            print(f"   Word document uploaded with ID: {self.test_word_resource_id}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_upload_pdf_document(self):
+        """Test admin uploading a PDF document for negative testing"""
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        # Create test PDF file
+        pdf_content = self.create_test_pdf_file()
+        
+        files = {
+            'file': ('test_document.pdf', pdf_content, 'application/pdf')
+        }
+        
+        success, response = self.run_test(
+            "Admin - Upload PDF Document",
+            "POST",
+            "admin/resources/upload",
+            200,
+            files=files
+        )
+        
+        if success and 'id' in response:
+            self.test_pdf_resource_id = response['id']
+            print(f"   PDF document uploaded with ID: {self.test_pdf_resource_id}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_word_document_preview_authenticated(self):
+        """Test Word document preview with authentication"""
+        if not hasattr(self, 'test_word_resource_id') or not self.test_word_resource_id:
+            print("❌ No Word document resource ID available")
+            return False
+        
+        # Use admin token for authentication
+        original_token = self.token
+        self.token = self.admin_token
+        
+        import requests
+        url = f"{self.base_url}/resources/{self.test_word_resource_id}/preview"
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                content_type = response.headers.get('content-type', '')
+                content = response.text
+                
+                # Verify it's HTML content
+                if 'text/html' in content_type:
+                    print(f"   ✅ Word Preview - Status: 200, Content-Type: {content_type}")
+                    
+                    # Check for HTML structure
+                    html_checks = [
+                        ('<!DOCTYPE html>' in content, 'DOCTYPE declaration'),
+                        ('<html>' in content, 'HTML tag'),
+                        ('<head>' in content, 'HEAD section'),
+                        ('<body>' in content, 'BODY section'),
+                        ('font-family:' in content, 'CSS styling'),
+                        ('Test Document' in content or 'test' in content.lower(), 'Document content')
+                    ]
+                    
+                    passed_checks = 0
+                    for check, description in html_checks:
+                        if check:
+                            passed_checks += 1
+                            print(f"      ✅ {description}")
+                        else:
+                            print(f"      ❌ {description}")
+                    
+                    print(f"   HTML validation: {passed_checks}/{len(html_checks)} checks passed")
+                    print(f"   Content preview: {content[:200]}...")
+                    
+                    # Restore original token
+                    self.token = original_token
+                    return passed_checks >= 4  # At least basic HTML structure
+                else:
+                    print(f"   ❌ Wrong content type: {content_type}")
+                    self.token = original_token
+                    return False
+            else:
+                print(f"   ❌ Word Preview - Status: {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error: {response.text}")
+                self.token = original_token
+                return False
+                
+        except Exception as e:
+            print(f"   ❌ Word Preview - Error: {str(e)}")
+            self.token = original_token
+            return False
+
+    def test_word_document_preview_unauthenticated(self):
+        """Test Word document preview without authentication (should fail)"""
+        if not hasattr(self, 'test_word_resource_id') or not self.test_word_resource_id:
+            print("❌ No Word document resource ID available")
+            return False
+        
+        # Remove token for unauthenticated request
+        original_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Word Preview - Unauthenticated (should fail)",
+            "GET",
+            f"resources/{self.test_word_resource_id}/preview",
+            401  # Expect unauthorized
+        )
+        
+        if success:
+            print("   ✅ Authentication properly required for preview")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_pdf_document_preview_rejection(self):
+        """Test that PDF documents are rejected for preview"""
+        if not hasattr(self, 'test_pdf_resource_id') or not self.test_pdf_resource_id:
+            print("❌ No PDF document resource ID available")
+            return False
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "PDF Preview - Should be rejected",
+            "GET",
+            f"resources/{self.test_pdf_resource_id}/preview",
+            400  # Expect bad request
+        )
+        
+        if success:
+            print("   ✅ PDF documents properly rejected for preview")
+            if 'detail' in response:
+                print(f"   Error message: {response['detail']}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_nonexistent_resource_preview(self):
+        """Test preview of non-existent resource"""
+        fake_resource_id = "nonexistent-resource-id-12345"
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "Preview Non-existent Resource",
+            "GET",
+            f"resources/{fake_resource_id}/preview",
+            400  # Expect bad request for invalid ID format
+        )
+        
+        if success:
+            print("   ✅ Non-existent resource properly handled")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_invalid_resource_id_preview(self):
+        """Test preview with invalid resource ID format"""
+        invalid_resource_id = "invalid-id-format"
+        
+        # Use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "Preview Invalid Resource ID",
+            "GET",
+            f"resources/{invalid_resource_id}/preview",
+            400  # Expect bad request
+        )
+        
+        if success:
+            print("   ✅ Invalid resource ID properly handled")
+            if 'detail' in response:
+                print(f"   Error message: {response['detail']}")
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
     def run_all_tests(self):
         """Run all API tests including comprehensive admin functionality"""
         print("🚀 Starting SDOH API Tests with Admin Functionality")
