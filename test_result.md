@@ -1141,7 +1141,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
@@ -1149,6 +1149,18 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ PASSED - Admin document deletion working correctly. Admin-only access, cascades deletion to sentences and annotations. Proper cleanup of related data."
+
+  - task: "Medical Record CSV Upload with Column Mapping"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE MEDICAL CSV TESTING COMPLETED - All 13/13 tests passed successfully. FULL MEDICAL CSV UPLOAD: ✅ CSV with both 'HISTORY OF PRESENT ILLNESS' and 'SOCIAL HISTORY' columns uploads successfully (13 sentences created), ✅ note_id properly mapped to subject_id (NOTE001, NOTE002, NOTE003), ✅ Text from both columns combined correctly (HPI first, then Social History), ✅ Sentences properly split at periods with correct row_index and sentence_index. HPI-ONLY CSV: ✅ CSV with only 'HISTORY OF PRESENT ILLNESS' column works correctly (4 sentences), ✅ note_id mapping functional (NOTE004, NOTE005). SOCIAL HISTORY-ONLY CSV: ✅ CSV with only 'SOCIAL HISTORY' column works correctly (5 sentences), ✅ note_id mapping functional (NOTE006, NOTE007). BACKWARD COMPATIBILITY: ✅ Traditional CSV formats (patient_id, discharge_summary) still supported (2 sentences). TEXT COMBINATION VERIFICATION: ✅ HPI text appears first in combined text, ✅ Social History text appended correctly, ✅ Sentence splitting preserves content integrity, ✅ All sentence metadata (subject_id, row_index, sentence_index) accurate. DOCUMENT MANAGEMENT: ✅ All uploads return proper response with document_id and sentence_count, ✅ Admin-only upload access enforced, ✅ Document cleanup successful (4/4 test documents deleted). The medical record CSV upload functionality is fully operational and meets all requirements from the review request."
 
 
   - agent: "main"
