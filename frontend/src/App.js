@@ -111,7 +111,13 @@ const AccountPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const saveProfile = async () => {
     setSaving(true);
@@ -138,6 +144,15 @@ const AccountPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-2 rounded shadow-lg text-white ${
+          toast.type === 'success' ? 'bg-green-600' : 
+          toast.type === 'error' ? 'bg-red-600' : 
+          toast.type === 'info' ? 'bg-blue-600' : 'bg-gray-600'
+        }`}>
+          {toast.message}
+        </div>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>My Account</CardTitle>
