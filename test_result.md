@@ -627,15 +627,18 @@ frontend:
 
   - task: "Dark/Light Mode Theme Toggle on Account Page"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "New testing request for dark/light mode theme toggle functionality on Account page. Need to verify: 1) Account page navigation, 2) Appearance section with Light/Dark buttons, 3) Theme switching functionality, 4) UI changes between modes, 5) Persistence across navigation and page refresh."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE DARK/LIGHT MODE THEME TOGGLE TESTING COMPLETED - All requirements from review request successfully verified. AUTHENTICATION & NAVIGATION: ✅ Admin login successful (admin@sdoh.com / admin123), ✅ Account page accessible via username click in header. APPEARANCE SECTION UI: ✅ 'Appearance' section found with proper title and description 'Select your preferred color scheme', ✅ Light theme button with Sun icon found and functional, ✅ Dark theme button with Moon icon found and functional, ✅ Light theme selected by default (correct behavior). THEME SWITCHING FUNCTIONALITY: ✅ Dark mode toggle working - 'dark' CSS class applied to document.documentElement, ✅ Light mode toggle working - 'dark' CSS class removed correctly, ✅ Button selection states update properly (highlighted borders), ✅ Visual theme changes applied correctly. PERSISTENCE TESTING: ✅ Dark mode persists across navigation to Dashboard, ✅ Dark mode persists after page refresh, ✅ Theme preference correctly stored in localStorage as 'dark', ✅ Button selection state persists correctly. SCREENSHOTS CAPTURED: account_page_initial.png, dark_mode_active.png, light_mode_active.png, theme_toggle_final.png. All 5/5 core requirements from review request successfully implemented and tested."
 
 
 metadata:
