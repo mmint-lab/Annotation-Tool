@@ -802,7 +802,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                         <span className="text-xs text-muted-foreground min-w-[80px]">Confidence:</span>
                         <div className="flex-1 relative">
                           {/* Background track */}
-                          <div className="h-1 bg-gray-300 rounded-full absolute top-1/2 left-0 right-0 -translate-y-1/2" />
+                          <div className="h-1 bg-muted rounded-full absolute top-1/2 left-0 right-0 -translate-y-1/2" />
                           {/* Filled track up to current value */}
                           <div 
                             className="h-1 bg-blue-500 rounded-full absolute top-1/2 left-0 -translate-y-1/2"
