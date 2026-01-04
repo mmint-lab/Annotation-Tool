@@ -828,8 +828,8 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
                         <span className="text-sm font-bold text-blue-600 min-w-[20px]">{tag.confidence || 3}</span>
                       </div>
                       <div className="flex items-center gap-2 pl-[80px]">
-                        <span className="text-xs text-gray-500 flex-1">Least confident</span>
-                        <span className="text-xs text-gray-500 flex-1 text-right">Most confident</span>
+                        <span className="text-xs text-muted-foreground flex-1">Least confident</span>
+                        <span className="text-xs text-muted-foreground flex-1 text-right">Most confident</span>
                       </div>
                     </div>
                   </div>
