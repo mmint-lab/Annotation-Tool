@@ -203,6 +203,46 @@ const AccountPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Theme</Label>
+            <p className="text-sm text-muted-foreground">Select your preferred color scheme</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setTheme('light')}
+              className={`flex-1 p-4 rounded-lg border-2 transition-all ${
+                theme === 'light' 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-border hover:border-muted-foreground'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Sun className="h-6 w-6" />
+                <span className="font-medium">Light</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setTheme('dark')}
+              className={`flex-1 p-4 rounded-lg border-2 transition-all ${
+                theme === 'dark' 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-border hover:border-muted-foreground'
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Moon className="h-6 w-6" />
+                <span className="font-medium">Dark</span>
+              </div>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
