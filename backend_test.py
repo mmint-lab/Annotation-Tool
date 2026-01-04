@@ -1170,6 +1170,26 @@ startxref
         if self.test_document_id:
             self.test_admin_delete_document()
         
+        # === WORD DOCUMENT PREVIEW TESTS ===
+        print("\n" + "=" * 20 + " WORD DOCUMENT PREVIEW TESTS " + "=" * 20)
+        
+        # Upload test documents for preview testing
+        self.test_admin_upload_word_document()
+        self.test_admin_upload_pdf_document()
+        
+        # Test Word document preview functionality
+        if hasattr(self, 'test_word_resource_id') and self.test_word_resource_id:
+            self.test_word_document_preview_authenticated()
+            self.test_word_document_preview_unauthenticated()
+        
+        # Test file type validation
+        if hasattr(self, 'test_pdf_resource_id') and self.test_pdf_resource_id:
+            self.test_pdf_document_preview_rejection()
+        
+        # Test error handling
+        self.test_nonexistent_resource_preview()
+        self.test_invalid_resource_id_preview()
+        
         # === REGULAR USER TESTS ===
         print("\n" + "=" * 25 + " REGULAR USER TESTS " + "=" * 25)
         
