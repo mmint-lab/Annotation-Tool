@@ -712,7 +712,7 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
           {currentSentence.annotations && currentSentence.annotations.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Existing Annotations</h4>
+                <h4 className="font-medium text-foreground">Existing Annotations</h4>
                 <div className="flex items-center gap-2">
                   <Checkbox id="selectAllSentenceAnns" checked={selectAll} onCheckedChange={toggleSelectAllAnns} />
                   <Label htmlFor="selectAllSentenceAnns">Select all</Label>
