@@ -382,7 +382,7 @@ const ActiveDocsPanel = ({ onOpenDoc }) => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="text-sm text-gray-600">Loading active documents...</div>
+          <div className="text-sm text-muted-foreground">Loading active documents...</div>
         ) : (
           <div className="space-y-3">
             {items.map((it) => (
