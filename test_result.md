@@ -1241,6 +1241,21 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED - Resource upload/download functionality fully working after GridFS API fixes. UPLOAD TESTS: ✅ PDF upload successful (POST /api/admin/resources/upload) with proper file ID response, ✅ Image upload successful with proper file ID response, ✅ File metadata correctly saved to resources_meta collection, ✅ Admin-only access properly enforced (403 for non-admin users). DOWNLOAD TESTS: ✅ PDF download successful (GET /api/resources/{id}/download) with content matching uploaded file, ✅ Image download successful with content matching uploaded file, ✅ Proper content-type headers returned. ERROR HANDLING: ✅ Unsupported file types properly rejected with 400 error, ✅ Missing file parameter properly rejected with 422 error, ✅ Unauthorized access properly rejected with 403 error. METADATA STORAGE: ✅ All uploaded resources appear in /api/resources endpoint with correct metadata. All 9/9 tests passed. The GridFS upload_from_stream and download_to_stream methods are working correctly, resolving the previous AsyncIOMotorGridIn await expression error."
 
+  - task: "Word Document Preview Functionality"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "New Word document preview functionality requested for testing - GET /api/resources/{resource_id}/preview endpoint"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE WORD DOCUMENT PREVIEW TESTING COMPLETED - All requirements from review request successfully verified. ENDPOINT FUNCTIONALITY: ✅ GET /api/resources/{resource_id}/preview returns HTML content (23,083 chars) with proper Content-Type: text/html; charset=utf-8, ✅ HTML includes complete document structure with DOCTYPE, html, head, and body tags, ✅ CSS styling properly included (font-family, margins, table styling) for professional document appearance. AUTHENTICATION: ✅ Endpoint requires authentication (returns 403 for unauthenticated requests), ✅ Admin login (admin@sdoh.com / admin123) working correctly for testing. FILE TYPE VALIDATION: ✅ PDF files properly rejected with 400 error 'Preview only available for Word documents', ✅ Image files properly rejected with 400 error 'Preview only available for Word documents', ✅ Only Word documents (.doc/.docx) with 'word' or 'msword' content-type allowed. CONTENT CONVERSION: ✅ Uses mammoth library to convert .docx to HTML successfully, ✅ Converted content maintains document structure and formatting, ✅ Full HTML page returned with professional styling (Arial font, centered layout, table borders). ERROR HANDLING: ✅ Invalid resource IDs properly handled with 400 error 'Invalid resource ID', ✅ Non-existent resources properly handled. TESTING VERIFIED: Used existing 'Annotation Guide.docx' resource (ID: 6959aa04538bc425b45afbdd) for comprehensive testing. All 6/6 core requirements from review request successfully implemented and tested."
+
 frontend:
   - task: "Tag Valence UI Changes"
     implemented: true
