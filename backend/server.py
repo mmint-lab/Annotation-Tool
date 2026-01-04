@@ -1277,18 +1277,268 @@ async def get_tag_prevalence_chart(current_user: Optional[User] = Depends(get_cu
             raise HTTPException(status_code=401, detail="Invalid token")
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Get real tag counts from annotations
+    annotations = await db.annotations.find({"skipped": {"$ne": True}}, {"_id": 0, "tags": 1}).to_list(100000)
+    
+    domain_counts = {}
+    for ann in annotations:
+        tags = ann.get('tags', [])
+        if isinstance(tags, list):
+            for t in tags:
+                domain = t.get('domain') if isinstance(t, dict) else getattr(t, 'domain', '')
+                if domain:
+                    domain_counts[domain] = domain_counts.get(domain, 0) + 1
+    
+    # Use SDOH domains in order
+    domain_labels = list(SDOH_DOMAINS)
+    domain_values = [domain_counts.get(d, 0) for d in domain_labels]
+    
+    # Shorten labels for display
+    short_labels = [d.split()[0] if len(d) > 15 else d for d in domain_labels]
+    
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from io import BytesIO
-    plt.figure(figsize=(10, 6))
-    plt.bar(['Economic', 'Social', 'Health'], [10, 15, 8], color=['#2563eb','#9333ea','#059669'])
-    plt.title('Tag Prevalence')
-    plt.ylabel('Count')
+    
+    colors = ['#2563eb', '#9333ea', '#059669', '#dc2626', '#f59e0b']
+    
+    plt.figure(figsize=(12, 6))
+    bars = plt.bar(short_labels, domain_values, color=colors[:len(domain_labels)])
+    plt.title('Tag Count by SDOH Domain', fontsize=14, fontweight='bold')
+    plt.ylabel('Number of Tags')
+    plt.xticks(rotation=15, ha='right')
+    
+    # Add value labels on bars
+    for bar, val in zip(bars, domain_values):
+        if val > 0:
+            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, str(val), 
+                    ha='center', va='bottom', fontsize=10)
+    
+    plt.tight_layout()
     buf = BytesIO()
-    plt.savefig(buf, format='png')
+    plt.savefig(buf, format='png', dpi=100)
+    plt.close()
     buf.seek(0)
     return StreamingResponse(buf, media_type='image/png')
+
+@api_router.get("/analytics/domain-tag-stats")
+async def get_domain_tag_stats(current_user: User = Depends(get_current_user)):
+    """Get detailed tag counts per domain and per specific tag"""
+    annotations = await db.annotations.find({"skipped": {"$ne": True}}, {"_id": 0, "tags": 1}).to_list(100000)
+    
+    # Count tags per domain and per specific tag
+    domain_counts = {}
+    tag_counts = {}  # {domain: {category: {tag: count}}}
+    
+    for ann in annotations:
+        tags = ann.get('tags', [])
+        if isinstance(tags, list):
+            for t in tags:
+                if isinstance(t, dict):
+                    domain = t.get('domain', '')
+                    category = t.get('category', '')
+                    tag = t.get('tag', '')
+                else:
+                    domain = getattr(t, 'domain', '')
+                    category = getattr(t, 'category', '')
+                    tag = getattr(t, 'tag', '')
+                
+                if domain:
+                    domain_counts[domain] = domain_counts.get(domain, 0) + 1
+                    if domain not in tag_counts:
+                        tag_counts[domain] = {}
+                    if category not in tag_counts[domain]:
+                        tag_counts[domain][category] = {}
+                    if tag:
+                        tag_counts[domain][category][tag] = tag_counts[domain][category].get(tag, 0) + 1
+    
+    # Format response
+    result = {
+        "domain_totals": domain_counts,
+        "tag_details": tag_counts,
+        "domains": list(SDOH_DOMAINS)
+    }
+    return result
+
+@api_router.get("/analytics/domain-chart/{domain_name}")
+async def get_domain_chart(domain_name: str, current_user: Optional[User] = Depends(get_current_user_optional), token: Optional[str] = None):
+    """Get chart showing tag counts for a specific domain"""
+    if token and not current_user:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+            if user_id:
+                u = await db.users.find_one({"id": user_id}, {"_id": 0})
+                if u:
+                    current_user = User(**u)
+        except Exception:
+            pass
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    # Get annotations with this domain
+    annotations = await db.annotations.find({"skipped": {"$ne": True}}, {"_id": 0, "tags": 1}).to_list(100000)
+    
+    tag_counts = {}
+    for ann in annotations:
+        tags = ann.get('tags', [])
+        if isinstance(tags, list):
+            for t in tags:
+                if isinstance(t, dict):
+                    domain = t.get('domain', '')
+                    tag = t.get('tag', '')
+                else:
+                    domain = getattr(t, 'domain', '')
+                    tag = getattr(t, 'tag', '')
+                
+                if domain == domain_name and tag:
+                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+    
+    if not tag_counts:
+        # Return empty chart
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        from io import BytesIO
+        plt.figure(figsize=(10, 4))
+        plt.text(0.5, 0.5, 'No data available', ha='center', va='center', fontsize=14)
+        plt.axis('off')
+        buf = BytesIO()
+        plt.savefig(buf, format='png', dpi=100)
+        plt.close()
+        buf.seek(0)
+        return StreamingResponse(buf, media_type='image/png')
+    
+    # Sort by count and take top 15
+    sorted_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:15]
+    labels = [t[0][:25] + '...' if len(t[0]) > 25 else t[0] for t in sorted_tags]
+    values = [t[1] for t in sorted_tags]
+    
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from io import BytesIO
+    
+    plt.figure(figsize=(12, max(4, len(labels) * 0.4)))
+    bars = plt.barh(range(len(labels)), values, color='#3b82f6')
+    plt.yticks(range(len(labels)), labels)
+    plt.xlabel('Count')
+    plt.title(f'Tag Distribution: {domain_name}', fontsize=12, fontweight='bold')
+    
+    # Add value labels
+    for i, (bar, val) in enumerate(zip(bars, values)):
+        plt.text(val + 0.3, i, str(val), va='center', fontsize=9)
+    
+    plt.gca().invert_yaxis()
+    plt.tight_layout()
+    buf = BytesIO()
+    plt.savefig(buf, format='png', dpi=100)
+    plt.close()
+    buf.seek(0)
+    return StreamingResponse(buf, media_type='image/png')
+
+@api_router.get("/analytics/document-user-progress/{document_id}")
+async def get_document_user_progress(document_id: str, current_user: User = Depends(get_current_user)):
+    """Get annotation progress per user for a document"""
+    doc = await db.documents.find_one({"id": document_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Get total sentences
+    total_sentences = await db.sentences.count_documents({"document_id": document_id})
+    if total_sentences == 0:
+        return {"document_id": document_id, "filename": doc.get('filename', ''), "total_sentences": 0, "user_progress": []}
+    
+    # Get all sentence IDs
+    sentence_ids = await db.sentences.distinct("id", {"document_id": document_id})
+    
+    # Get assigned users
+    assigned_users = doc.get('assigned_users', [])
+    
+    # Get all users who have annotated this document
+    annotator_ids = await db.annotations.distinct("user_id", {"sentence_id": {"$in": sentence_ids}})
+    
+    # Combine assigned and actual annotators
+    all_user_ids = list(set(assigned_users + annotator_ids))
+    
+    # Get user info
+    users = await db.users.find({"id": {"$in": all_user_ids}}, {"_id": 0}).to_list(100)
+    user_map = {u['id']: u.get('full_name') or u.get('email') or u['id'] for u in users}
+    
+    # Calculate progress per user
+    user_progress = []
+    for user_id in all_user_ids:
+        annotated_count = len(await db.annotations.distinct("sentence_id", {
+            "sentence_id": {"$in": sentence_ids},
+            "user_id": user_id
+        }))
+        user_progress.append({
+            "user_id": user_id,
+            "user_name": user_map.get(user_id, user_id),
+            "annotated": annotated_count,
+            "total": total_sentences,
+            "progress": round(annotated_count / total_sentences * 100, 1)
+        })
+    
+    # Sort by progress descending
+    user_progress.sort(key=lambda x: x['progress'], reverse=True)
+    
+    return {
+        "document_id": document_id,
+        "filename": doc.get('filename', ''),
+        "total_sentences": total_sentences,
+        "user_progress": user_progress
+    }
+
+@api_router.get("/analytics/all-documents-user-progress")
+async def get_all_documents_user_progress(current_user: User = Depends(get_current_user)):
+    """Get annotation progress per user for all documents"""
+    docs = await db.documents.find({}, {"_id": 0}).to_list(1000)
+    
+    results = []
+    for doc in docs:
+        document_id = doc['id']
+        total_sentences = await db.sentences.count_documents({"document_id": document_id})
+        if total_sentences == 0:
+            continue
+        
+        sentence_ids = await db.sentences.distinct("id", {"document_id": document_id})
+        assigned_users = doc.get('assigned_users', [])
+        annotator_ids = await db.annotations.distinct("user_id", {"sentence_id": {"$in": sentence_ids}})
+        all_user_ids = list(set(assigned_users + annotator_ids))
+        
+        if not all_user_ids:
+            continue
+        
+        users = await db.users.find({"id": {"$in": all_user_ids}}, {"_id": 0}).to_list(100)
+        user_map = {u['id']: u.get('full_name') or u.get('email') or u['id'] for u in users}
+        
+        user_progress = []
+        for user_id in all_user_ids:
+            annotated_count = len(await db.annotations.distinct("sentence_id", {
+                "sentence_id": {"$in": sentence_ids},
+                "user_id": user_id
+            }))
+            user_progress.append({
+                "user_id": user_id,
+                "user_name": user_map.get(user_id, user_id),
+                "annotated": annotated_count,
+                "total": total_sentences,
+                "progress": round(annotated_count / total_sentences * 100, 1)
+            })
+        
+        user_progress.sort(key=lambda x: x['progress'], reverse=True)
+        
+        results.append({
+            "document_id": document_id,
+            "filename": doc.get('filename', ''),
+            "total_sentences": total_sentences,
+            "user_progress": user_progress
+        })
+    
+    return results
 
 @api_router.get("/analytics/projects")
 async def get_projects_analytics(current_user: User = Depends(get_current_user)):
