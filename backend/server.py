@@ -1942,10 +1942,6 @@ async def preview_resource(resource_id: str, current_user: Optional[User] = Depe
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error converting document: {str(e)}")
 
-        raise HTTPException(status_code=404, detail="Resource not found")
-    
-    return {"message": "Resource deleted successfully"}
-
 
 app.include_router(api_router)
 
