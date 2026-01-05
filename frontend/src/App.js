@@ -1342,7 +1342,7 @@ const Dashboard = () => {
       const res = await axios.delete(`${API}/annotations/document/${documentId}/clear-all`);
       showToast(`Deleted ${res.data.deleted} annotations`, 'success');
       // Refresh the sentences to update the UI
-      await openDocument(documentId);
+      await annotateDoc(documentId, { targetIndex: currentSentenceIndex });
       fetchAnalytics();
     } catch (e) {
       showToast('Error clearing annotations: ' + (e.response?.data?.detail || 'Please try again.'), 'error');
