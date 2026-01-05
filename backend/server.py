@@ -580,7 +580,20 @@ async def remove_tag_from_annotation(annotation_id: str, payload: RemoveTagPaylo
 
 @api_router.get("/annotations/sentence/{sentence_id}")
 async def get_sentence_annotations(sentence_id: str, current_user: User = Depends(get_current_user)):
-    annotations = await db.annotations.find({"sentence_id": sentence_id}, {"_id": 0}).to_list(100)
+    # Filter annotations: admins see all, others see only their own
+    if current_user.role == UserRole.ADMIN:
+        annotations = await db.annotations.find({"sentence_id": sentence_id}, {"_id": 0}).to_list(100)
+    else:
+        annotations = await db.annotations.find({"sentence_id": sentence_id, "user_id": current_user.id}, {"_id": 0}).to_list(100)
+    
+    # Get user names
+    user_ids = list(set(a.get("user_id") for a in annotations if a.get("user_id")))
+    if user_ids:
+        users = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "full_name": 1, "email": 1}).to_list(100)
+        user_map = {u["id"]: u.get("full_name") or u.get("email", "").split("@")[0] or "Unknown" for u in users}
+        for ann in annotations:
+            ann["user_name"] = user_map.get(ann.get("user_id"), "Unknown")
+    
     return annotations
 
 @api_router.post("/annotations/bulk-delete")
