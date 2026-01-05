@@ -906,6 +906,56 @@ const StructuredAnnotationInterface = ({ sentences, currentIndex, onIndexChange,
             <Button variant="outline" onClick={() => { setSelectedTags([]); setNotes(""); onIndexChange(Math.max(0, currentIndex - 1)); }} disabled={currentIndex === 0}>Previous</Button>
             <Button variant="outline" onClick={() => { setSelectedTags([]); setNotes(""); onIndexChange(Math.min(sentences.length - 1, currentIndex + 1)); }} disabled={currentIndex === sentences.length - 1}>Next</Button>
           </div>
+          
+          {/* Navigation and Clear Actions */}
+          <div className="flex flex-wrap gap-2 items-center pt-3 mt-3 border-t">
+            <span className="text-sm text-muted-foreground mr-2">Jump to:</span>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => { setSelectedTags([]); setNotes(""); onIndexChange(0); }}
+              disabled={currentIndex === 0}
+            >
+              First Sentence
+            </Button>
+            {currentSubject && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  const firstOfSubject = sentences.findIndex(s => s.subject_id === currentSubject);
+                  if (firstOfSubject >= 0) {
+                    setSelectedTags([]); 
+                    setNotes(""); 
+                    onIndexChange(firstOfSubject);
+                  }
+                }}
+                disabled={sentences.findIndex(s => s.subject_id === currentSubject) === currentIndex}
+              >
+                First of Subject
+              </Button>
+            )}
+            <div className="ml-auto">
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={async () => {
+                  if (!confirmAction) return;
+                  const totalAnnotations = sentences.reduce((acc, s) => acc + (s.annotations?.length || 0), 0);
+                  if (totalAnnotations === 0) {
+                    return;
+                  }
+                  const ok = await confirmAction(`Are you sure you want to delete ALL ${totalAnnotations} annotations for this document? This action cannot be undone.`);
+                  if (ok && onClearAllAnnotations) {
+                    await onClearAllAnnotations(documentId);
+                  }
+                }}
+                disabled={sentences.reduce((acc, s) => acc + (s.annotations?.length || 0), 0) === 0}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Clear All Annotations
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
