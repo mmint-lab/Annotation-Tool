@@ -717,54 +717,37 @@ agent_communication:
       Implemented Projects Overview stacked chart endpoint (/api/analytics/projects-chart) and wired it in Admin -> Analytics. Added Subject filter to Manage Annotations modal (client-side unique subjects from doc annotations). Updated test plan focus and requested backend+frontend retesting.
   - agent: "testing"
     message: |
-      ✅ ASSIGN USERS FUNCTIONALITY TESTING COMPLETED SUCCESSFULLY - Comprehensive testing of user assignment feature on Documents page completed with excellent results:
+      ❌ CLEAR ALL ANNOTATIONS BUTTON TESTING COMPLETED - CRITICAL ISSUE FOUND
       
-      AUTHENTICATION & NAVIGATION:
+      TESTING SUMMARY:
+      - ❌ Clear All Annotations button is NOT VISIBLE in the annotation interface
       - ✅ Admin login successful (admin@sdoh.com / admin123)
-      - ✅ Documents tab accessible and loaded with 4 documents
-      - ✅ Admin features properly visible and functional
+      - ✅ Annotate tab accessible and functional
+      - ✅ Document annotation interface loads correctly (ten_item_test.csv)
+      - ✅ Existing annotations present (124/134 annotations, skipped annotation visible)
+      - ✅ Scrolled to bottom of annotation interface successfully
+      - ❌ Clear All Annotations button NOT FOUND despite code implementation
       
-      ASSIGN USERS BUTTONS:
-      - ✅ Found 4 'Assign Users' buttons on document cards
-      - ✅ All buttons functional and clickable
-      - ✅ Proper admin-only access enforcement
+      CRITICAL ISSUE DETAILS:
+      The Clear All Annotations button is implemented in the code (StructuredAnnotationInterface component, lines 939-957) but is NOT rendering in the UI. The button should appear at the bottom of the annotation interface but is completely missing from the DOM.
       
-      MODAL FUNCTIONALITY:
-      - ✅ 'Assign Users to Document' modal opens correctly
-      - ✅ Modal shows proper title and description with document name (test_discharge_summaries.csv)
-      - ✅ Modal displays complete user list with 8 available users
-      - ✅ Modal includes Save and Cancel buttons
+      CODE ANALYSIS:
+      - Button implementation exists with proper confirmation dialog
+      - Uses onClearAllAnnotations prop function
+      - Should be visible when annotations are present
+      - Proper disabled state logic implemented
       
-      USER SELECTION:
-      - ✅ User list displays correctly with checkboxes for: Rachel Polcyn, Analytics Test User 055010, Test Admin User, Admin User, Test User 035906, r, Test User 080509, Alexis Polcyn
-      - ✅ Multiple users can be selected via checkboxes
-      - ✅ Checkbox selection state works correctly
-      - ✅ Only annotator users shown in list (admin users filtered out appropriately)
+      IMPACT:
+      Users cannot clear all annotations as requested in the review. This is a blocking issue that prevents the core functionality from being accessible to users.
       
-      SAVE FUNCTIONALITY:
-      - ✅ Save button visible and functional
-      - ✅ Modal closes after Save operation
-      - ✅ API call to /api/admin/documents/{document_id}/assign-users executes successfully
-      - ✅ User assignment updates document cards with 'Assigned users' information
+      RECOMMENDATION:
+      Main agent needs to investigate why the Clear All Annotations button is not rendering in the UI despite being implemented in the code. Possible issues:
+      1. Missing prop passing (onClearAllAnnotations function)
+      2. Conditional rendering logic preventing button display
+      3. CSS/styling issues hiding the button
+      4. Component structure issues
       
-      CANCEL FUNCTIONALITY:
-      - ✅ Cancel button available and functional
-      - ✅ Cancel properly closes modal without saving changes
-      
-      ADMIN FEATURES VERIFICATION:
-      - ✅ All admin features visible (Manage Annotations, Download buttons, Delete buttons)
-      - ✅ Admin role-based access control working correctly
-      - ✅ Document cards show assigned user information
-      
-      TESTING COVERAGE COMPLETED:
-      - ✅ Modal opening/closing functionality
-      - ✅ User selection/deselection via checkboxes
-      - ✅ Save functionality with backend API integration
-      - ✅ Cancel functionality
-      - ✅ Admin role enforcement and UI visibility
-      - ✅ Document assignment persistence
-      
-      CONCLUSION: The Assign Users functionality is working perfectly with proper user interface, backend integration, and admin role enforcement. All test requirements from the review request have been successfully completed.
+      The button implementation appears correct but is not visible to users, making this feature non-functional.
   - agent: "testing"
     message: |
       ✅ DARK/LIGHT MODE THEME TOGGLE TESTING COMPLETED - Comprehensive testing of new theme toggle functionality on Account page completed successfully:
