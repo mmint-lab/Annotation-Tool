@@ -1333,6 +1333,18 @@ const Dashboard = () => {
     catch (e) { showToast('Error saving annotation: ' + (e.response?.data?.detail || 'Please try again.'), 'error'); }
   };
 
+  const clearAllDocumentAnnotations = async (documentId) => {
+    try {
+      const res = await axios.delete(`${API}/annotations/document/${documentId}/clear-all`);
+      showToast(`Deleted ${res.data.deleted} annotations`, 'success');
+      // Refresh the sentences to update the UI
+      await openDocument(documentId);
+      fetchAnalytics();
+    } catch (e) {
+      showToast('Error clearing annotations: ' + (e.response?.data?.detail || 'Please try again.'), 'error');
+    }
+  };
+
   const deleteDocument = async (documentId) => {
     if (!window.confirm('Delete this document and all associated annotations?')) return;
     try { setDocuments(documents.filter(d => d.id !== documentId)); await axios.delete(`${API}/admin/documents/${documentId}`); fetchAnalytics(); showToast('Document deleted', 'success'); }
