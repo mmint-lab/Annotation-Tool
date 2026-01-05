@@ -68,15 +68,15 @@ SDOH_DOMAINS = [
 SDOH_TAG_STRUCTURE = {
     "Economic Stability": {
         "Employment": [
-            "Employed", "Unemployed", "Disabled",
+            "Employed", "Disabled",
             "Retired", "Homemaker", "Student", "Harmful Workplace"
         ],
         "Food Insecurity": [
-            "Low Food Security",
+            "Low or Very Low Food Security",
             "Physical Access Barrier", "Food Assistance Program"
         ],
         "Housing Instability": [
-            "Overcrowding", "Multiple Moves",
+            "Multiple Moves",
             "Eviction or Foreclosure", "Unhoused",
             "Housing Assistance Program"
         ],
@@ -102,8 +102,8 @@ SDOH_TAG_STRUCTURE = {
     },
     "Health Care Access and Quality": {
         "Access to Health Services": [
-            "No Local Services Available", "Barrier to Specialist Care",
-            "Insurance Coverage Limitations", "Financial Barriers to Medical Care"
+            "Insurance Coverage Limitations",
+            "Limited Access to Specialist Health Services"
         ],
         "Access to Primary Care": [
             "No Primary Care Provider", "Extended Gaps in Care",
@@ -111,18 +111,16 @@ SDOH_TAG_STRUCTURE = {
         ],
         "Health Literacy": [
             "Difficulty Understanding Medical Information",
-            "Limited Understanding of Preventative Care",
             "Digital Health Literacy Gaps"
         ]
     },
     "Neighborhood and Built Environment": {
         "Access to Healthy Foods": [
             "Limited Healthy Food Options",
-            "Food Environment Quality"
+            "Increased Distance to Food Sources"
         ],
         "Crime and Violence": [
-            "Perceived Neighborhood Safety", "Reported Criminal Activity",
-            "Gang or Drug-Related Activity"
+            "Perceived Neighborhood Safety", "Reported Criminal Activity"
         ],
         "Environmental Conditions": [
             "Air Quality Concerns", "Water Quality Issues",
@@ -143,7 +141,7 @@ SDOH_TAG_STRUCTURE = {
             "Community Supervision"
         ],
         "Social Cohesion": [
-            "Supportive Relationships", "Social Isolation"
+            "Supportive Relationships", "Trust and Belonging in Community"
         ],
         "Experiences of Discrimination or Exclusion": [
             "Race", "Ethnicity", "Gender", "Sexual Orientation", "Other Identity"
