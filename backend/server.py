@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
@@ -31,7 +32,9 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # JWT Configuration
-SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-this-in-production')
+SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY environment variable is required")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -40,6 +43,15 @@ ALLOWED_RESOURCE_EXT = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt
 
 # Create the main app without a prefix
 app = FastAPI(title="Social Determinants of Health Annotation Tool")
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create a router with the /api prefix
 # GridFS bucket for resources
@@ -246,6 +258,8 @@ async def get_current_user(user_id: str = Depends(verify_token)):
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    if not user.get("is_active", True):
+        raise HTTPException(status_code=403, detail="Account is deactivated")
     return User(**user)
 
 async def get_admin_user(current_user: User = Depends(get_current_user)):
@@ -372,20 +386,24 @@ async def upload_document(
     reader = csv.DictReader(io.StringIO(csv_content))
 
     def pick_text(row: Dict[str, Any]) -> str:
+        # Normalize column names for lookup (handle underscores vs spaces)
+        norm = {k.replace('_', ' ').upper(): k for k in row}
+
         # First check for specific medical record columns
         text_parts = []
-        if 'HISTORY OF PRESENT ILLNESS' in row and isinstance(row['HISTORY OF PRESENT ILLNESS'], str) and row['HISTORY OF PRESENT ILLNESS'].strip():
-            text_parts.append(row['HISTORY OF PRESENT ILLNESS'].strip())
-        if 'SOCIAL HISTORY' in row and isinstance(row['SOCIAL HISTORY'], str) and row['SOCIAL HISTORY'].strip():
-            text_parts.append(row['SOCIAL HISTORY'].strip())
-        
+        for col_name in ['HISTORY OF PRESENT ILLNESS', 'SOCIAL HISTORY']:
+            real_key = norm.get(col_name)
+            if real_key and isinstance(row[real_key], str) and row[real_key].strip():
+                text_parts.append(row[real_key].strip())
+
         if text_parts:
             return ' '.join(text_parts)
-        
+
         # Try common text columns as fallback
         for key in ['discharge_summary','text','note','notes','summary','content','sentence']:
-            if key in row and isinstance(row[key], str) and row[key].strip():
-                return row[key].strip()
+            matched = norm.get(key.replace('_', ' ').upper())
+            if matched and isinstance(row[matched], str) and row[matched].strip():
+                return row[matched].strip()
         
         # fallback: join fields that look like text
         acc = []
@@ -600,8 +618,12 @@ async def get_sentence_annotations(sentence_id: str, current_user: User = Depend
 async def bulk_delete_annotations(payload: Dict[str, List[str]], current_user: User = Depends(get_current_user)):
     ids = payload.get("annotation_ids", [])
     if ids:
-        await db.annotations.delete_many({"id": {"$in": ids}})
-    return {"deleted": len(ids)}
+        query = {"id": {"$in": ids}}
+        if current_user.role != UserRole.ADMIN:
+            query["user_id"] = current_user.id
+        result = await db.annotations.delete_many(query)
+        return {"deleted": result.deleted_count}
+    return {"deleted": 0}
 
 @api_router.delete("/annotations/document/{document_id}/clear-all")
 async def clear_all_document_annotations(document_id: str, current_user: User = Depends(get_current_user)):
@@ -1360,11 +1382,11 @@ async def get_tag_prevalence_chart(current_user: Optional[User] = Depends(get_cu
                     current_user = User(**u)
                 else:
                     raise HTTPException(status_code=401, detail="Invalid token user")
-        except Exception:
+        except jwt.PyJWTError:
             raise HTTPException(status_code=401, detail="Invalid token")
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
-    
+
     # Get real tag counts from annotations
     annotations = await db.annotations.find({"skipped": {"$ne": True}}, {"_id": 0, "tags": 1}).to_list(100000)
     
@@ -1460,11 +1482,11 @@ async def get_domain_chart(domain_name: str, current_user: Optional[User] = Depe
                 u = await db.users.find_one({"id": user_id}, {"_id": 0})
                 if u:
                     current_user = User(**u)
-        except Exception:
+        except jwt.PyJWTError:
             pass
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
-    
+
     # Get annotations with this domain
     annotations = await db.annotations.find({"skipped": {"$ne": True}}, {"_id": 0, "tags": 1}).to_list(100000)
     
@@ -1696,7 +1718,7 @@ async def get_projects_chart(current_user: Optional[User] = Depends(get_current_
                     current_user = User(**u)
                 else:
                     raise HTTPException(status_code=401, detail="Invalid token user")
-        except Exception:
+        except jwt.PyJWTError:
             raise HTTPException(status_code=401, detail="Invalid token")
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -1732,8 +1754,8 @@ async def get_projects_chart(current_user: Optional[User] = Depends(get_current_
 async def upload_resource(file: UploadFile = File(...), current_user: User = Depends(get_admin_user)):
     if not file or not getattr(file, 'filename', None):
         raise HTTPException(status_code=400, detail="No file provided")
-    ext = (file.filename.split('.')[-1] or '').lower()
-    if ext not in ALLOWED_RESOURCE_EXT:
+    ext = Path(file.filename).suffix.lstrip('.').lower()
+    if not ext or ext not in ALLOWED_RESOURCE_EXT:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: .{ext}")
     data = await file.read()
     
@@ -1798,7 +1820,7 @@ async def list_resources(
 ):
     query: Dict[str, Any] = {}
     if q:
-        query['filename'] = {"$regex": q, "$options": "i"}
+        query['filename'] = {"$regex": re.escape(q), "$options": "i"}
     if kind:
         if kind == 'file':
             query['kind'] = {"$ne": "link"}
@@ -1844,7 +1866,7 @@ async def download_resource(resource_id: str, current_user: Optional[User] = Dep
                 if not u:
                     raise HTTPException(status_code=401, detail="Invalid token user")
                 current_user = User(**u)
-        except Exception:
+        except jwt.PyJWTError:
             raise HTTPException(status_code=401, detail="Invalid token")
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -1902,11 +1924,11 @@ async def preview_resource(resource_id: str, current_user: Optional[User] = Depe
                 u = await db.users.find_one({"id": user_id}, {"_id": 0})
                 if u:
                     current_user = User(**u)
-        except Exception:
+        except jwt.PyJWTError:
             pass
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
-    
+
     try:
         oid = ObjectId(resource_id)
     except Exception:
@@ -1935,7 +1957,9 @@ async def preview_resource(resource_id: str, current_user: Optional[User] = Depe
     if is_word:
         # Convert Word to HTML using mammoth
         try:
-            result = mammoth.convert_to_html(buffer)
+            import asyncio
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, mammoth.convert_to_html, buffer)
             html_content = result.value
             
             full_html = f"""
@@ -1967,7 +1991,9 @@ async def preview_resource(resource_id: str, current_user: Optional[User] = Depe
             import openpyxl
             from openpyxl.utils import get_column_letter
             
-            wb = openpyxl.load_workbook(buffer, read_only=True, data_only=True)
+            import asyncio
+            loop = asyncio.get_event_loop()
+            wb = await loop.run_in_executor(None, lambda: openpyxl.load_workbook(buffer, read_only=True, data_only=True))
             sheet = wb.active
             
             rows_html = []
@@ -2023,8 +2049,6 @@ async def preview_resource(resource_id: str, current_user: Optional[User] = Depe
             raise HTTPException(status_code=500, detail=f"Error reading Excel file: {str(e)}")
 
 
-app.include_router(api_router)
-
 @api_router.get("/admin/settings/default-project")
 async def get_default_project(current_user: User = Depends(get_admin_user)):
     value = await get_default_project_name()
@@ -2040,3 +2064,21 @@ async def reassign_documents_to_default(current_user: User = Depends(get_admin_u
     default_name = await get_default_project_name()
     await db.documents.update_many({}, {"$set": {"project_name": default_name}})
     return {"updated": True, "project_name": default_name}
+
+# Include API router (must come after all route definitions)
+app.include_router(api_router)
+
+# Serve React static files and SPA fallback
+STATIC_DIR = Path(__file__).parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR / "static")), name="react-static")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Serve the React SPA for all non-API routes."""
+        file_path = (STATIC_DIR / full_path).resolve()
+        if not str(file_path).startswith(str(STATIC_DIR.resolve())):
+            return FileResponse(str(STATIC_DIR / "index.html"))
+        if file_path.is_file():
+            return FileResponse(str(file_path))
+        return FileResponse(str(STATIC_DIR / "index.html"))
