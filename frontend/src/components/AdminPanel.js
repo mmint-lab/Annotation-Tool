@@ -147,7 +147,7 @@ const AdminPanel = ({ notify = (msg) => window.alert(msg) }) => {
           </div>
         </CardContent>
       </Card>
-      (<ToastContainer toast={toast} onClose={() => setToast(null)} />
+      <ToastContainer toast={toast} onClose={() => setToast(null)} />
       {/* Confirmation Dialog */}
       <Dialog open={confirmState.open} onOpenChange={(open) => { 
         if (!open && confirmState.resolve) { 

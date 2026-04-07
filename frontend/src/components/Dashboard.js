@@ -960,16 +960,7 @@ const Dashboard = () => {
           </DialogContent>
         </Dialog>
       </Tabs>
-      (<ToastContainer toast={toast} onClose={() => setToast(null)} />
-        <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 flex items-center gap-2 ${
-          toast.type === 'error' ? 'bg-red-500 text-white' :
-          toast.type === 'info' ? 'bg-blue-500 text-white' :
-          'bg-green-500 text-white'
-        }`} role="alert">
-          <span>{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 hover:opacity-80" aria-label="Dismiss"><X className="h-3 w-3" /></button>
-        </div>
-      )}
+      <ToastContainer toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 };

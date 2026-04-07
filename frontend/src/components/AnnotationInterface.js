@@ -227,6 +227,7 @@ const AnnotationInterface = ({ sentences, currentIndex, onIndexChange, tagStruct
 
   return (
     <div className="space-y-6">
+      <ToastContainer toast={toast} onClose={() => setToast(null)} />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
